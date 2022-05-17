@@ -9,6 +9,7 @@ import (
 	"github.com/Kindling-project/kindling/collector/analyzer/tcpmetricanalyzer"
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/consumer"
+	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/logexporter"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/otelexporter"
 	"github.com/Kindling-project/kindling/collector/consumer/processor/aggregateprocessor"
@@ -74,6 +75,8 @@ func (a *Application) registerFactory() {
 	a.componentsFactory.RegisterReceiver(udsreceiver.Uds, udsreceiver.NewUdsReceiver, &udsreceiver.Config{})
 	a.componentsFactory.RegisterAnalyzer(network.Network.String(), network.NewNetworkAnalyzer, &network.Config{})
 	a.componentsFactory.RegisterProcessor(k8sprocessor.K8sMetadata, k8sprocessor.NewKubernetesProcessor, &k8sprocessor.DefaultConfig)
+	a.componentsFactory.RegisterExporter(flattenexporter.Flattten, flattenexporter.NewExporter, &flattenexporter.Config{})
+
 	a.componentsFactory.RegisterExporter(otelexporter.Otel, otelexporter.NewExporter, &otelexporter.Config{})
 	a.componentsFactory.RegisterAnalyzer(tcpmetricanalyzer.TcpMetric.String(), tcpmetricanalyzer.NewTcpMetricAnalyzer, &tcpmetricanalyzer.Config{})
 	a.componentsFactory.RegisterExporter(logexporter.Type, logexporter.New, &logexporter.Config{})
@@ -99,12 +102,14 @@ func (a *Application) readInConfig(path string) error {
 func (a *Application) buildPipeline() error {
 	// TODO: Build pipeline via configuration to implement dependency injection
 	// Initialize exporters
-	otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
-	otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
+	flattenExporterFactory := a.componentsFactory.Exporters[flattenexporter.Flattten]
+	flattenExporter := flattenExporterFactory.NewFunc(flattenExporterFactory.Config, a.telemetry.Telemetry)
+	//otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
+	//otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
 	// Initialize all processors
 	// 1. GaugeGroup Aggregator
 	aggregateProcessorFactory := a.componentsFactory.Processors[aggregateprocessor.Type]
-	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, otelExporter)
+	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, flattenExporter)
 	// 2. Kubernetes metadata processor
 	k8sProcessorFactory := a.componentsFactory.Processors[k8sprocessor.K8sMetadata]
 	k8sMetadataProcessor := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessor)
@@ -115,7 +120,7 @@ func (a *Application) buildPipeline() error {
 	// use its configuration to initialize the conntracker module which is also used by others.
 	networkAnalyzer := networkAnalyzerFactory.NewFunc(networkAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 	// 2. Layer 4 TCP events analyzer
-	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, otelExporter)
+	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, flattenExporter)
 	k8sMetadataProcessor2 := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessorForTcp)
 	tcpAnalyzerFactory := a.componentsFactory.Analyzers[tcpmetricanalyzer.TcpMetric.String()]
 	tcpAnalyzer := tcpAnalyzerFactory.NewFunc(tcpAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor2})

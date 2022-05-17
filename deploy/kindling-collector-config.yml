@@ -134,7 +134,25 @@ exporters:
       endpoint: 10.10.10.10:8080
     stdout:
       collect_period: 15s
-
+  flatten:
+    master_ip: "yanshi_default_default"
+    endpoint: "http://127.0.0.1:8080"
+    insecure: true
+    timeout: 10s
+    read_buffer_size: 123
+    write_buffer_size: 345
+    sending_queue:
+      enabled: true
+      num_consumers: 2
+      queue_size: 10
+    retry_on_failure:
+      enabled: true
+      initial_interval: 10s
+      max_interval: 60s
+      max_elapsed_time: 10m
+    compression: gzip
+    batch_timeout: 10s
+    send_batch_size: 20
 observability:
   logger:
     console_level: info # debug,info,warn,error,none
