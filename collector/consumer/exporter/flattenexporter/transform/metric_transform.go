@@ -10,13 +10,13 @@ import (
 	"strconv"
 )
 
-func CreateFlattenMetrics(service *v1.Service, requestMetrics []*flattenMetrics.RequestMetric) flattenMetrics.FlattenMetrics {
-	metrics := flattenMetrics.RequestMetrics{
+func CreateFlattenMetrics(service *v1.Service, requestMetricArr []*flattenMetrics.RequestMetric) flattenMetrics.FlattenMetrics {
+	requestMetrics := flattenMetrics.RequestMetrics{
 		Service: service,
-		Metrics: requestMetrics,
+		Metrics: requestMetricArr,
 	}
 	initMetricRequest := flattenMetrics.FlattenMetrics{
-		RequestMetrics: &metrics,
+		RequestMetrics: &requestMetrics,
 	}
 	return initMetricRequest
 }
@@ -24,20 +24,31 @@ func CreateFlattenMetrics(service *v1.Service, requestMetrics []*flattenMetrics.
 func GenerateRequestMetrics(gaugeGroup *model.GaugeGroup, service *v1.Service) *flattenMetrics.RequestMetrics {
 	return &flattenMetrics.RequestMetrics{
 		Service: service,
-		Metrics: GenerateMetrics(gaugeGroup),
+		Metrics: GenerateRequestMetric(gaugeGroup),
 	}
 }
 
-func GenerateMetrics(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
+func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
+		MetricType:        constant.MetricTypeRequest,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
-		MetricMap:         GenerateMetricMap(gaugeGroup),
-		Labels:            GenerateMetricLabels(gaugeGroup),
+		MetricMap:         GenerateRequestMetricMap(gaugeGroup),
+		Labels:            GenerateRequestMetricLabels(gaugeGroup),
 	},
 	}
 }
 
-func GenerateMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func GenerateTcpInuseMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
+	return []*flattenMetrics.RequestMetric{{
+		MetricType:        constant.MetricTypeTcpInuse,
+		StartTimeUnixNano: gaugeGroup.Timestamp,
+		MetricMap:         GenerateTcpInuseMetricMap(gaugeGroup),
+		Labels:            GenerateTcpInuseMetricLabels(gaugeGroup),
+	},
+	}
+}
+
+func GenerateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
 	MetricMap := make(map[string]*flattenMetrics.Metric)
 	gaugeMap := make(map[string]int64)
 	for _, gauge := range gaugeGroup.Values {
@@ -57,6 +68,13 @@ func GenerateMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.
 	return MetricMap
 }
 
+func GenerateTcpInuseMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+	metricMap := make(map[string]*flattenMetrics.Metric)
+	for _, gauge := range gaugeGroup.Values {
+		metricMap[gauge.Name] = GenerateSumMetric(gauge.Name, gauge.Value)
+	}
+	return metricMap
+}
 func GenerateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[string]int64) *flattenMetrics.Metric {
 	switch key {
 	case constant.RequestIo:
@@ -135,7 +153,7 @@ func GenerateHistogramMetric(key string, gaugeMap map[string]int64) *flattenMetr
 	}}}
 }
 
-func GenerateMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0)
 	labelMap := gaugeGroup.Labels
 	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
@@ -183,8 +201,19 @@ func GenerateMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
 	return metricLabels
 }
 
+func GenerateTcpInuseMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+	metricLabels := make([]v1.StringKeyValue, 0)
+
+	labelsMap := gaugeGroup.Labels.ToStringMap()
+	for k, v := range labelsMap {
+		GenerateStringKeyValueSlice(k, v, &metricLabels)
+	}
+	return metricLabels
+}
+
 func CreateDefaultExplicitBoundsSlice() []float64 {
 	explicitBoundsSlice := make([]float64, 0, 1)
+	//TODO 需要修改
 	boundsArr := []float64{100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000, 30000, 50000, 100000}
 	explicitBoundsSlice = append(explicitBoundsSlice, boundsArr...)
 	return explicitBoundsSlice

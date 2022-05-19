@@ -211,8 +211,9 @@ func (bm *batchMetric) itemCount() int {
 
 func (bm *batchMetric) add(item interface{}) {
 	metrics := item.(flattenMetrics.FlattenMetrics)
-	newMetricsCount := len(metrics.RequestMetrics.Metrics)
-	if newMetricsCount == 0 {
+	newRequestMetricsCount := len(metrics.RequestMetrics.Metrics)
+	newMetricsCount := newRequestMetricsCount
+	if (newMetricsCount) == 0 {
 		return
 	}
 	bm.count += newMetricsCount

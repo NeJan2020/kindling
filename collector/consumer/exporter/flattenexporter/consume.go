@@ -31,8 +31,17 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 			return err
 		}
 	case constnames.AggregatedNetRequestGaugeGroup:
-		traceServiceRequest := transform.CreateFlattenMetrics(e.Config.GetServiceInstance(), transform.GenerateMetrics(gaugeGroup))
-		err := batchMetricProcessor.ConsumeMetrics(context.Background(), traceServiceRequest)
+		service := e.Config.GetServiceInstance()
+		metricServiceRequest := transform.CreateFlattenMetrics(service, transform.GenerateRequestMetric(gaugeGroup))
+		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+		if err != nil {
+			return err
+		}
+		//TCP 链接指标
+	case constnames.TcpInuseGaugeGroup:
+		service := e.Config.GetServiceInstance()
+		metricServiceRequest := transform.CreateFlattenMetrics(service, transform.GenerateTcpInuseMetric(gaugeGroup))
+		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
 			return err
 		}

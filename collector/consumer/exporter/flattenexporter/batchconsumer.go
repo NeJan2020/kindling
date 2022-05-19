@@ -8,7 +8,6 @@ import (
 	flattenTraces "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
 	flattenMetrics "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/metrics/flatten"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/component"
-	"github.com/Kindling-project/kindling/collector/model/constvalues"
 )
 
 type MetricsBatch interface {
@@ -51,18 +50,13 @@ func (e *Consumer) ConsumeTraces(context context.Context, td flattenTraces.Expor
 }
 
 func (e *Consumer) ConsumeMetrics(context context.Context, md flattenMetrics.FlattenMetrics) error {
-	for i := 0; i < len(md.RequestMetrics.Metrics); i++ {
-		fmt.Println(md.RequestMetrics.Metrics[i].GetMetricMap()[constvalues.RequestTotalTime].GetSum().GetValue())
-	}
-	requestMetricsBytes, err := md.RequestMetrics.Marshal()
-	if err != nil {
-		return err
+	requestMetricsBytes, requestErr := md.RequestMetrics.Marshal()
+	if requestErr != nil {
+		return requestErr
 	}
 	metricsRequest := &flatten.FlattenExportMetricsServiceRequest{
-		RequestMetrics:   requestMetricsBytes,
-		ConnectMetrics:   nil,
-		InterfaceMetrics: nil,
-		Service:          e.cfg.Config.GetServiceInstance(),
+		RequestMetrics: requestMetricsBytes,
+		Service:        e.cfg.Config.GetServiceInstance(),
 	}
 
 	marshal, err := metricsRequest.Marshal()
