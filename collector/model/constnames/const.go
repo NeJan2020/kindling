@@ -24,6 +24,8 @@ const (
 	// AggregatedNetRequestGaugeGroup stands for the gaugeGroup after aggregation.
 	AggregatedNetRequestGaugeGroup = "aggregated_net_request_gauge_group"
 
+	TcpInuseGaugeGroup = "pod_container_network_tcp_inuse"
+
 	TcpGaugeGroupName  = "tcp_metric_gauge_group"
 	NodeGaugeGroupName = "node_metric_gauge_group"
 )

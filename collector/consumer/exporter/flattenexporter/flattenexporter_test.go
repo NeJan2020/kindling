@@ -111,7 +111,70 @@ func makeAggNetGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup.Labels.AddIntValue(constlabels.DstPort, 8081)
 	return gaugesGroup
 }
-
+func makeTcpInuseGaugeGroup(i int) *model.GaugeGroup {
+	gaugesGroup := &model.GaugeGroup{
+		Name: constnames.TcpInuseGaugeGroup,
+		Values: []*model.Gauge{
+			{
+				Name:  "Established",
+				Value: int64(i),
+			},
+			{
+				Name:  "SynSent",
+				Value: 0,
+			},
+			{
+				Name:  "SynRecv",
+				Value: 0,
+			},
+			{
+				Name:  "FinWait1",
+				Value: 0,
+			},
+			{
+				Name:  "FinWait2",
+				Value: 12,
+			},
+			{
+				Name:  "TimeWait",
+				Value: 0,
+			},
+			{
+				Name:  "Close",
+				Value: 0,
+			},
+			{
+				Name:  "CloseWait",
+				Value: 0,
+			},
+			{
+				Name:  "LastAck",
+				Value: 12,
+			},
+			{
+				Name:  "Listen",
+				Value: 0,
+			},
+			{
+				Name:  "Closing",
+				Value: 0,
+			},
+		},
+		Labels:    model.NewAttributeMap(),
+		Timestamp: 19900909090,
+	}
+	gaugesGroup.Labels.AddStringValue("mode", "tcp4")
+	gaugesGroup.Labels.AddStringValue("container", "test-container"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("container_id", "test-container_id"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("namespace", "test-namespace"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("node", "test-node"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("node_ip", "test-node_ip"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("pod", "test-pod"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("service", "test-elasticsearch-svc"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("workload_kind", "test-statefulset"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("workload_name", "test-workload_name"+strconv.Itoa(i))
+	return gaugesGroup
+}
 func TestInitFlattenExporter(t *testing.T) {
 	InitFlattenExporter(t)
 }
@@ -132,20 +195,18 @@ func InitFlattenExporter(t *testing.T) {
 	}
 	export := NewExporter(config, component.NewDefaultTelemetryTools())
 	for i := 0; i < 100; i++ {
-		go export.Consume(makeSingleGaugeGroup(i))
+		//go export.Consume(makeSingleGaugeGroup(i))
 		//time.Sleep(1 * time.Second)
 	}
-	//go export.Consume(makeSingleGaugeGroup(10))
-	//go export.Consume(makeSingleGaugeGroup(11))
-	//go export.Consume(makeSingleGaugeGroup(12))
-	//go export.Consume(makeSingleGaugeGroup(13))
-	//go export.Consume(makeAggNetGaugeGroup(10))
-	//go export.Consume(makeAggNetGaugeGroup(11))
-	//go export.Consume(makeAggNetGaugeGroup(12))
-	//go export.Consume(makeAggNetGaugeGroup(13))
+
 	/*	for i := 0; i < 10; i++ {
 		go export.Consume(makeAggNetGaugeGroup(i))
 		time.Sleep(1 * time.Second)
 	}*/
+	for i := 0; i < 10; i++ {
+		go export.Consume(makeTcpInuseGaugeGroup(i))
+		//time.Sleep(1 * time.Second)
+	}
+
 	wg.Wait()
 }
