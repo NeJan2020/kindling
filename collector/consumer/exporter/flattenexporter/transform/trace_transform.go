@@ -43,7 +43,7 @@ func GenerateEvents(gaugeGroup *model.GaugeGroup) []*trace.Span_Event {
 func GenerateAttributes(gaugeGroup *model.GaugeGroup) []v11.KeyValue {
 	keyValueSlice := make([]v11.KeyValue, 0)
 	for _, gauge := range gaugeGroup.Values {
-		GenerateKeyValueIntSlice(gauge.Name, gauge.Value, &keyValueSlice)
+		GenerateKeyValueIntSlice(gauge.Name, gauge.GetInt().Value, &keyValueSlice)
 	}
 	labelMap := gaugeGroup.Labels
 

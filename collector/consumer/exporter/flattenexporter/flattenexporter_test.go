@@ -16,22 +16,10 @@ func makeSingleGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup := &model.GaugeGroup{
 		Name: constnames.SingleNetRequestGaugeGroup,
 		Values: []*model.Gauge{
-			{
-				constvalues.ResponseIo,
-				1234567891,
-			},
-			{
-				constvalues.RequestTotalTime,
-				int64(i),
-			},
-			{
-				constvalues.RequestIo,
-				4500,
-			},
-			{
-				constvalues.RequestCount,
-				4500,
-			},
+			model.NewIntGauge(constvalues.ResponseIo, 1234567891),
+			model.NewIntGauge(constvalues.RequestTotalTime, int64(i)),
+			model.NewIntGauge(constvalues.RequestIo, 4500),
+			model.NewIntGauge(constvalues.RequestCount, 4500),
 		},
 		Labels:    model.NewAttributeMap(),
 		Timestamp: 19900909090,
@@ -66,22 +54,10 @@ func makeAggNetGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup := &model.GaugeGroup{
 		Name: constnames.AggregatedNetRequestGaugeGroup,
 		Values: []*model.Gauge{
-			{
-				constvalues.ResponseIo,
-				1234567891,
-			},
-			{
-				constvalues.RequestTotalTime,
-				int64(i),
-			},
-			{
-				constvalues.RequestIo,
-				4500,
-			},
-			{
-				constvalues.RequestCount,
-				4500,
-			},
+			model.NewIntGauge(constvalues.ResponseIo, 1234567891),
+			model.NewIntGauge(constvalues.RequestTotalTime, int64(i)),
+			model.NewIntGauge(constvalues.RequestIo, 4500),
+			model.NewIntGauge(constvalues.RequestCount, 4500),
 		},
 		Labels:    model.NewAttributeMap(),
 		Timestamp: 19900909090,
@@ -115,50 +91,17 @@ func makeTcpInuseGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup := &model.GaugeGroup{
 		Name: constnames.TcpInuseGaugeGroup,
 		Values: []*model.Gauge{
-			{
-				Name:  "Established",
-				Value: int64(i),
-			},
-			{
-				Name:  "SynSent",
-				Value: 0,
-			},
-			{
-				Name:  "SynRecv",
-				Value: 0,
-			},
-			{
-				Name:  "FinWait1",
-				Value: 0,
-			},
-			{
-				Name:  "FinWait2",
-				Value: 12,
-			},
-			{
-				Name:  "TimeWait",
-				Value: 0,
-			},
-			{
-				Name:  "Close",
-				Value: 0,
-			},
-			{
-				Name:  "CloseWait",
-				Value: 0,
-			},
-			{
-				Name:  "LastAck",
-				Value: 12,
-			},
-			{
-				Name:  "Listen",
-				Value: 0,
-			},
-			{
-				Name:  "Closing",
-				Value: 0,
-			},
+			model.NewIntGauge("Established", int64(i)),
+			model.NewIntGauge("SynSent", int64(i)),
+			model.NewIntGauge("SynRecv", int64(i)),
+			model.NewIntGauge("FinWait1", int64(i)),
+			model.NewIntGauge("FinWait2", int64(i)),
+			model.NewIntGauge("TimeWait", int64(i)),
+			model.NewIntGauge("Close", int64(i)),
+			model.NewIntGauge("CloseWait", int64(i)),
+			model.NewIntGauge("LastAck", int64(i)),
+			model.NewIntGauge("Listen", int64(i)),
+			model.NewIntGauge("Closing", int64(i)),
 		},
 		Labels:    model.NewAttributeMap(),
 		Timestamp: 19900909090,
