@@ -1,6 +1,8 @@
 package k8sprocessor
 
 import (
+	"strconv"
+
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/consumer"
 	"github.com/Kindling-project/kindling/collector/consumer/processor"
@@ -9,7 +11,6 @@ import (
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/model/constnames"
 	"go.uber.org/zap"
-	"strconv"
 )
 
 const (
@@ -63,6 +64,8 @@ func (p *K8sMetadataProcessor) Consume(gaugeGroup *model.GaugeGroup) error {
 		p.processNetRequestMetric(gaugeGroup)
 	case constnames.TcpGaugeGroupName:
 		p.processTcpMetric(gaugeGroup)
+	case constnames.TcpStatsGaugeGroup:
+		p.processTcpstatsMetric(gaugeGroup)
 	default:
 		p.processNetRequestMetric(gaugeGroup)
 	}
@@ -80,6 +83,22 @@ func (p *K8sMetadataProcessor) processNetRequestMetric(gaugeGroup *model.GaugeGr
 
 func (p *K8sMetadataProcessor) processTcpMetric(gaugeGroup *model.GaugeGroup) {
 	p.addK8sMetaDataViaIp(gaugeGroup.Labels)
+}
+
+func (p *K8sMetadataProcessor) processTcpstatsMetric(gaugeGroup *model.GaugeGroup) {
+	p.addK8sMetaDataForContainerLabel(gaugeGroup.Labels)
+}
+
+func (p *K8sMetadataProcessor) addK8sMetaDataForContainerLabel(labelMap *model.AttributeMap) {
+	containerId := labelMap.GetStringValue(constlabels.ContainerId)
+	resInfo, ok := p.metadata.GetByContainerId(containerId)
+	if ok {
+		addContainerMetaInfoLabel(labelMap, resInfo)
+	} else {
+		labelMap.UpdateAddStringValue(constlabels.NodeIp, p.localNodeIp)
+		labelMap.UpdateAddStringValue(constlabels.Node, p.localNodeName)
+		labelMap.UpdateAddStringValue(constlabels.Namespace, constlabels.InternalClusterNamespace)
+	}
 }
 
 func (p *K8sMetadataProcessor) addK8sMetaDataForClientLabel(labelMap *model.AttributeMap) {
@@ -297,6 +316,24 @@ func (p *K8sMetadataProcessor) addK8sMetaDataViaIpDST(labelMap *model.AttributeM
 		labelMap.UpdateAddStringValue(constlabels.DstNamespace, constlabels.InternalClusterNamespace)
 	} else {
 		labelMap.UpdateAddStringValue(constlabels.DstNamespace, constlabels.ExternalClusterNamespace)
+	}
+}
+
+func addContainerMetaInfoLabel(labelMap *model.AttributeMap, containerInfo *kubernetes.K8sContainerInfo) {
+	labelMap.UpdateAddStringValue(constlabels.Container, containerInfo.Name)
+	labelMap.UpdateAddStringValue(constlabels.ContainerId, containerInfo.ContainerId)
+	addPodMetaInfoLabel(labelMap, containerInfo.RefPodInfo)
+}
+
+func addPodMetaInfoLabel(labelMap *model.AttributeMap, podInfo *kubernetes.K8sPodInfo) {
+	labelMap.UpdateAddStringValue(constlabels.Node, podInfo.NodeName)
+	labelMap.UpdateAddStringValue(constlabels.NodeIp, podInfo.NodeAddress)
+	labelMap.UpdateAddStringValue(constlabels.Namespace, podInfo.Namespace)
+	labelMap.UpdateAddStringValue(constlabels.WorkloadKind, podInfo.WorkloadKind)
+	labelMap.UpdateAddStringValue(constlabels.WorkloadName, podInfo.WorkloadName)
+	labelMap.UpdateAddStringValue(constlabels.Pod, podInfo.PodName)
+	if podInfo.ServiceInfo != nil {
+		labelMap.UpdateAddStringValue(constlabels.Service, podInfo.ServiceInfo.ServiceName)
 	}
 }
 

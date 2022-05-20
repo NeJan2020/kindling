@@ -40,6 +40,7 @@ const (
 	DstContainerId  = "dst_container_id"
 	DstContainer    = "dst_container"
 	Node            = "node"
+	NodeIp          = "node_ip"
 	Namespace       = "namespace"
 	WorkloadKind    = "workload_kind"
 	WorkloadName    = "workload_name"
@@ -48,6 +49,8 @@ const (
 	Container       = "container"
 	Ip              = "ip"
 	Port            = "port"
+
+	Mode = "mode"
 
 	RequestContent  = "request_content"
 	ResponseContent = "response_content"

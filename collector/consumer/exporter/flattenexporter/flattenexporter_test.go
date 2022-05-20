@@ -1,15 +1,16 @@
 package flattenexporter
 
 import (
+	"strconv"
+	"sync"
+	"testing"
+
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/model/constnames"
 	"github.com/Kindling-project/kindling/collector/model/constvalues"
 	"github.com/spf13/viper"
-	"strconv"
-	"sync"
-	"testing"
 )
 
 func makeSingleGaugeGroup(i int) *model.GaugeGroup {
@@ -87,9 +88,9 @@ func makeAggNetGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup.Labels.AddIntValue(constlabels.DstPort, 8081)
 	return gaugesGroup
 }
-func makeTcpInuseGaugeGroup(i int) *model.GaugeGroup {
+func makeTcpStatsGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup := &model.GaugeGroup{
-		Name: constnames.TcpInuseGaugeGroup,
+		Name: constnames.TcpStatsGaugeGroup,
 		Values: []*model.Gauge{
 			model.NewIntGauge("Established", int64(i)),
 			model.NewIntGauge("SynSent", int64(i)),
@@ -147,7 +148,7 @@ func InitFlattenExporter(t *testing.T) {
 		time.Sleep(1 * time.Second)
 	}*/
 	for i := 0; i < 10; i++ {
-		go export.Consume(makeTcpInuseGaugeGroup(i))
+		go export.Consume(makeTcpStatsGaugeGroup(i))
 		//time.Sleep(1 * time.Second)
 	}
 

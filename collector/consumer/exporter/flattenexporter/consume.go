@@ -2,6 +2,7 @@ package flattenexporter
 
 import (
 	"context"
+
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/constant"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/transform"
 	"github.com/Kindling-project/kindling/collector/model"
@@ -38,7 +39,7 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 			return err
 		}
 		//TCP 链接指标
-	case constnames.TcpInuseGaugeGroup:
+	case constnames.TcpStatsGaugeGroup:
 		service := e.Config.GetServiceInstance()
 		metricServiceRequest := transform.CreateFlattenMetrics(service, transform.GenerateTcpInuseMetric(gaugeGroup))
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)

@@ -23,3 +23,17 @@ const (
 	ProtocolKafka = "kafka"
 	ProtocolMysql = "mysql"
 )
+
+const (
+	TcpstatEstablished = "Established"
+	TcpstatSynSent     = "SynSent"
+	TcpstatSynRecv     = "SynRecv"
+	TcpstatFinWait1    = "FinWait1"
+	TcpstatFinWait2    = "FinWait2"
+	TcpstatTimeWait    = "TimeWait"
+	TcpstatClose       = "Close"
+	TcpstatCloseWait   = "CloseWait"
+	TcpstatLastAck     = "LastAck"
+	TcpstatListen      = "Listen"
+	TcpstatClosing     = "Closing"
+)
