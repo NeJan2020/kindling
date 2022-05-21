@@ -48,7 +48,7 @@ func GenerateAttributes(gaugeGroup *model.GaugeGroup) []v11.KeyValue {
 	labelMap := gaugeGroup.Labels
 
 	//TODO gaugeGroup还没加这个字段
-	GenerateKeyValueBoolSlice(constant.IsConnectFail, labelMap.GetBoolValue(constant.IsConnectFail), &keyValueSlice)
+	//GenerateKeyValueBoolSlice(constant.IsConnectFail, labelMap.GetBoolValue(constant.IsConnectFail), &keyValueSlice)
 	GenerateKeyValueBoolSlice(constant.IsError, labelMap.GetBoolValue(constlabels.IsError), &keyValueSlice)
 	GenerateKeyValueBoolSlice(constant.IsSlow, labelMap.GetBoolValue(constlabels.IsSlow), &keyValueSlice)
 	GenerateKeyValueBoolSlice(constant.IsServer, labelMap.GetBoolValue(constlabels.IsServer), &keyValueSlice)

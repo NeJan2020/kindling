@@ -66,7 +66,8 @@ const (
 	Traces  = "traces"
 	Metrics = "metrics"
 
-	MetricTypeRequest  = 0
-	MetricTypeConnect  = 1
-	MetricTypeTcpInuse = 2
+	MetricTypeRequest   = 0
+	MetricTypeConnect   = 1
+	MetricTypeTcpInuse  = 2
+	MetricTypePageFault = 3
 )

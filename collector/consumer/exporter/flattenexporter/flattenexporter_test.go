@@ -1,16 +1,15 @@
 package flattenexporter
 
 import (
-	"strconv"
-	"sync"
-	"testing"
-
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/model/constnames"
 	"github.com/Kindling-project/kindling/collector/model/constvalues"
 	"github.com/spf13/viper"
+	"strconv"
+	"sync"
+	"testing"
 )
 
 func makeSingleGaugeGroup(i int) *model.GaugeGroup {
@@ -55,6 +54,12 @@ func makeAggNetGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup := &model.GaugeGroup{
 		Name: constnames.AggregatedNetRequestGaugeGroup,
 		Values: []*model.Gauge{
+			model.NewHistogramGauge("request_duration_time", &model.Histogram{
+				Sum:                10000*4999 + 15000,
+				Count:              10000,
+				ExplicitBoundaries: []int64{0, 100, 200, 500, 1000, 2000, 5000, 10000},
+				BucketCounts:       []uint64{0, 100, 200, 500, 1000, 2000, 5000, 10000},
+			}),
 			model.NewIntGauge(constvalues.ResponseIo, 1234567891),
 			model.NewIntGauge(constvalues.RequestTotalTime, int64(i)),
 			model.NewIntGauge(constvalues.RequestIo, 4500),
@@ -119,6 +124,29 @@ func makeTcpStatsGaugeGroup(i int) *model.GaugeGroup {
 	gaugesGroup.Labels.AddStringValue("workload_name", "test-workload_name"+strconv.Itoa(i))
 	return gaugesGroup
 }
+
+func makePageFaultGaugeGroup(i int) *model.GaugeGroup {
+	gaugesGroup := &model.GaugeGroup{
+		Name: constnames.PageFaultGaugeGroupName,
+		Values: []*model.Gauge{
+			model.NewIntGauge("kindling_pagefault_major_total", int64(i)),
+			model.NewIntGauge("kindling_pagefault_minor_total", int64(i)),
+		},
+		Labels:    model.NewAttributeMap(),
+		Timestamp: 19900909090,
+	}
+	gaugesGroup.Labels.AddStringValue("tid", "test-tid"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("pid", "test-pid"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("container_id", "test-container_id"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("namespace", "test-namespace"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("node", "test-node"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("node_ip", "test-node_ip"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("pod", "test-pod"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("service", "test-elasticsearch-svc"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("workload_kind", "test-statefulset"+strconv.Itoa(i))
+	gaugesGroup.Labels.AddStringValue("workload_name", "test-workload_name"+strconv.Itoa(i))
+	return gaugesGroup
+}
 func TestInitFlattenExporter(t *testing.T) {
 	InitFlattenExporter(t)
 }
@@ -138,17 +166,17 @@ func InitFlattenExporter(t *testing.T) {
 		t.Fatalf("error happened when unmarshaling config: %v", err)
 	}
 	export := NewExporter(config, component.NewDefaultTelemetryTools())
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		//go export.Consume(makeSingleGaugeGroup(i))
 		//time.Sleep(1 * time.Second)
+		//go export.Consume(makePageFaultGaugeGroup(i))
 	}
 
-	/*	for i := 0; i < 10; i++ {
-		go export.Consume(makeAggNetGaugeGroup(i))
-		time.Sleep(1 * time.Second)
-	}*/
 	for i := 0; i < 10; i++ {
-		go export.Consume(makeTcpStatsGaugeGroup(i))
+		go export.Consume(makeAggNetGaugeGroup(i))
+	}
+	for i := 0; i < 10; i++ {
+		//go export.Consume(makeTcpStatsGaugeGroup(i))
 		//time.Sleep(1 * time.Second)
 	}
 

@@ -26,6 +26,8 @@ const (
 
 	TcpStatsGaugeGroup = "tcp_stats_gauge_group"
 
-	TcpGaugeGroupName  = "tcp_metric_gauge_group"
-	NodeGaugeGroupName = "node_metric_gauge_group"
+	TcpGaugeGroupName       = "tcp_metric_gauge_group"
+	NodeGaugeGroupName      = "node_metric_gauge_group"
+	PageFaultGaugeGroupName = "pgft_metric_gauge_group"
+	ConnectGaugeGroupName   = "connect_metric_gauge_group"
 )

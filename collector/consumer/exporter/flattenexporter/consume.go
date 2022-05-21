@@ -23,25 +23,41 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 
 	batchTraceProcessor := (*e.batchProcessors)[constant.Traces]
 	batchMetricProcessor := (*e.batchProcessors)[constant.Metrics]
+	service := e.Config.GetServiceInstance()
 	switch gaugeGroup.Name {
 	case constnames.SingleNetRequestGaugeGroup:
-		traceServiceRequest := transform.CreateExportTraceServiceRequest(transform.GenerateResourceSpans(gaugeGroup))
+		singleTrace := transform.GenerateResourceSpans(gaugeGroup)
+		traceServiceRequest := transform.CreateExportTraceServiceRequest(singleTrace)
 		//to batchProcessor
 		err := batchTraceProcessor.ConsumeTraces(context.Background(), traceServiceRequest)
 		if err != nil {
 			return err
 		}
 	case constnames.AggregatedNetRequestGaugeGroup:
-		service := e.Config.GetServiceInstance()
-		metricServiceRequest := transform.CreateFlattenMetrics(service, transform.GenerateRequestMetric(gaugeGroup))
+		requestMetric := transform.GenerateRequestMetric(gaugeGroup)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, requestMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
 			return err
 		}
 		//TCP 链接指标
 	case constnames.TcpStatsGaugeGroup:
-		service := e.Config.GetServiceInstance()
-		metricServiceRequest := transform.CreateFlattenMetrics(service, transform.GenerateTcpInuseMetric(gaugeGroup))
+		tcpInuseMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeTcpInuse)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpInuseMetric)
+		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+		if err != nil {
+			return err
+		}
+	case constnames.PageFaultGaugeGroupName:
+		pageFaultMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypePageFault)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, pageFaultMetric)
+		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+		if err != nil {
+			return err
+		}
+	case constnames.ConnectGaugeGroupName:
+		connectMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeConnect)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, connectMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
 			return err

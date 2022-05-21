@@ -21,13 +21,6 @@ func CreateFlattenMetrics(service *v1.Service, requestMetricArr []*flattenMetric
 	return initMetricRequest
 }
 
-func GenerateRequestMetrics(gaugeGroup *model.GaugeGroup, service *v1.Service) *flattenMetrics.RequestMetrics {
-	return &flattenMetrics.RequestMetrics{
-		Service: service,
-		Metrics: GenerateRequestMetric(gaugeGroup),
-	}
-}
-
 func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
 		MetricType:        constant.MetricTypeRequest,
@@ -38,12 +31,12 @@ func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.Reque
 	}
 }
 
-func GenerateTcpInuseMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
+func GenerateXXMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
-		MetricType:        constant.MetricTypeTcpInuse,
+		MetricType:        metricType,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
-		MetricMap:         GenerateTcpInuseMetricMap(gaugeGroup),
-		Labels:            GenerateTcpInuseMetricLabels(gaugeGroup),
+		MetricMap:         GenerateMetricMap(gaugeGroup),
+		Labels:            GenerateMetricLabels(gaugeGroup),
 	},
 	}
 }
@@ -68,16 +61,18 @@ func GenerateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenM
 	return MetricMap
 }
 
-func GenerateTcpInuseMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func GenerateMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
 	metricMap := make(map[string]*flattenMetrics.Metric)
 	for _, gauge := range gaugeGroup.Values {
+		if gauge.DataType() == model.HistogramGaugeType {
+			metricMap[gauge.Name] = GenerateHistogramMetric(gauge.Name, gauge)
+		}
 		if gauge.DataType() == model.IntGaugeType {
 			metricMap[gauge.Name] = GenerateSumMetric(gauge.Name, gauge)
 		}
 	}
 	return metricMap
 }
-
 func GenerateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
 	switch key {
 	case constant.RequestIo:
@@ -87,7 +82,7 @@ func GenerateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[strin
 	case constant.RequestTotalTime:
 		return GenerateSumMetric(key, gaugeMap[key])
 	case constant.RequestDurationTime:
-		return GenerateHistogramMetric(key, gaugeMap)
+		return GenerateHistogramMetric(key, gaugeMap[key])
 	case constant.Slow:
 		if gaugeMap[constvalues.RequestTotalTime].GetInt().Value > 500 {
 			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
@@ -145,16 +140,16 @@ func GenerateSumMetric(key string, value *model.Gauge) *flattenMetrics.Metric {
 	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value.GetInt().Value}}}
 }
 
-func GenerateHistogramMetric(key string, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
-	bucketCountsSlice := make([]float64, len(gaugeMap[key].GetHistogram().ExplicitBoundaries))
-	bucketCountsFloatSlice := gaugeMap[key].GetHistogram().ExplicitBoundaries
+func GenerateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Metric {
+	bucketCountsSlice := make([]float64, len(gauge.GetHistogram().ExplicitBoundaries))
+	bucketCountsFloatSlice := gauge.GetHistogram().ExplicitBoundaries
 	for i, value := range bucketCountsFloatSlice {
 		bucketCountsSlice[i] = float64(value)
 	}
 	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Histogram{Histogram: &flattenMetrics.Histogram{
-		Count:          gaugeMap[key].GetHistogram().Count,
-		Sum:            gaugeMap[key].GetHistogram().Sum,
-		BucketCounts:   gaugeMap[key].GetHistogram().BucketCounts,
+		Count:          gauge.GetHistogram().Count,
+		Sum:            gauge.GetHistogram().Sum,
+		BucketCounts:   gauge.GetHistogram().BucketCounts,
 		ExplicitBounds: bucketCountsSlice,
 	}}}
 }
@@ -163,8 +158,8 @@ func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	metricLabels := make([]v1.StringKeyValue, 0)
 	labelMap := gaugeGroup.Labels
 	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcMasterIP, "SrcMasterIP", &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstMasterIP, "DstMasterIP", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.SrcMasterIP, "SrcMasterIP", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.DstMasterIP, "DstMasterIP", &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcWorkloadKind, labelMap.GetStringValue(constlabels.SrcWorkloadKind), &metricLabels)
@@ -182,15 +177,27 @@ func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	GenerateStringKeyValueSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DnatIp, labelMap.GetStringValue(constlabels.DnatIp), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstServiceIp, "DstServiceIp", &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstServicePort, "DstServicePort", &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstPodIp, "DstPodIp", &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstPodPort, "DstPodPort", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.DstServiceIp, "DstServiceIp", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.DstServicePort, "DstServicePort", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.DstPodIp, "DstPodIp", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.DstPodPort, "DstPodPort", &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), &metricLabels)
 	GenerateStringKeyValueSlice(constant.IsServer, strconv.FormatBool(labelMap.GetBoolValue(constlabels.IsServer)), &metricLabels)
-	GenerateStringKeyValueSlice(constant.HttpHost, "HttpHost", &metricLabels)
+	//GenerateStringKeyValueSlice(constant.HttpHost, "HttpHost", &metricLabels)
+	DnatIp := labelMap.GetStringValue(constlabels.DnatIp)
+	if DnatIp != "" {
+		GenerateStringKeyValueSlice(constant.DstPodIp, DnatIp, &metricLabels)
+	} else {
+		GenerateStringKeyValueSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
+	}
 
+	DnatPort := labelMap.GetStringValue(constlabels.DnatPort)
+	if DnatPort != "" {
+		GenerateStringKeyValueSlice(constant.DstPodPort, DnatPort, &metricLabels)
+	} else {
+		GenerateStringKeyValueSlice(constant.DstPodPort, labelMap.GetStringValue(constlabels.DstPort), &metricLabels)
+	}
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
 	GenerateStringKeyValueSlice(constant.Protocol, labelMap.GetStringValue(protocol), &metricLabels)
 	var protocolKey string
@@ -207,32 +214,11 @@ func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	return metricLabels
 }
 
-func GenerateTcpInuseMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+func GenerateMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0)
-
 	labelsMap := gaugeGroup.Labels.ToStringMap()
 	for k, v := range labelsMap {
 		GenerateStringKeyValueSlice(k, v, &metricLabels)
 	}
 	return metricLabels
-}
-
-func CreateDefaultExplicitBoundsSlice() []float64 {
-	explicitBoundsSlice := make([]float64, 0, 1)
-	//TODO 需要修改
-	boundsArr := []float64{100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000, 30000, 50000, 100000}
-	explicitBoundsSlice = append(explicitBoundsSlice, boundsArr...)
-	return explicitBoundsSlice
-}
-
-func CreateBucketCountsSlice(explicitBoundsSlice []float64, requestAvgTime int64, requestCount int64) []uint64 {
-	bucketCountsSlice := make([]uint64, 0, 1)
-	for _, bucket := range explicitBoundsSlice {
-		if float64(requestAvgTime) > bucket {
-			bucketCountsSlice = append(bucketCountsSlice, 0)
-		} else {
-			bucketCountsSlice = append(bucketCountsSlice, uint64(requestCount))
-		}
-	}
-	return bucketCountsSlice
 }
