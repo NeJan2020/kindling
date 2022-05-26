@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/DataDog/ebpf v0.0.0-20220301203322-3fc9ab3b8daf
 	github.com/cenkalti/backoff/v4 v4.1.1
+	github.com/elastic/gosigar v0.14.2
 	github.com/florianl/go-conntrack v0.3.0
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/gogo/protobuf v1.3.2

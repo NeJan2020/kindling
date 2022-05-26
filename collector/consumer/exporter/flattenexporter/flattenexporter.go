@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/constant"
@@ -12,10 +15,8 @@ import (
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/consumer/consumererror"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/exporterhelper"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/middleware"
+	"github.com/Kindling-project/kindling/collector/pkg/processpid"
 
-	"go.uber.org/zap"
-	"google.golang.org/genproto/googleapis/rpc/status"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +24,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
+	"google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 type Cfg struct {
@@ -40,8 +45,19 @@ const (
 	Flattten                 = "flattenexporter"
 )
 
+var initProcessPidPortInfo sync.Once
+
 func NewExporter(config interface{}, telemetry *component.TelemetryTools) exporter.Exporter {
 	oce, err := newCfg(config, telemetry)
+	initProcessPidPortInfo.Do(func() {
+		config := oce.Config
+		// Try to get HostIP from env
+		hostIp := os.Getenv("MY_NODE_IP")
+		if hostIp == "" {
+			hostIp = "UNKNOW_HOST"
+		}
+		processpid.InitSendPidPortBytime(config.BatchTimeout, config.Endpoint, config.MasterIp, hostIp)
+	})
 	if err != nil {
 		telemetry.Logger.Panic("Cannot convert Component config", zap.String("componentType", Flattten))
 		return nil
