@@ -104,6 +104,11 @@ const (
 	SpanDubboResponseBody = "dubbo.response_body"
 
 	NetWorkAnalyzeGaugeGroup = "netAnalyzeGauges"
+
+	KindlingTcpConnectTotal                    = "kindling_tcp_connect_total"
+	KindlingTcpConnectDurationNanosecondsTotal = "kindling_tcp_connect_duration_nanoseconds_total"
+
+	Success = "success"
 )
 const (
 	STR_EMPTY = ""

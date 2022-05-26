@@ -35,7 +35,7 @@ exporters:
 
   flattenexporter:
     master_ip: "yanshi_default_default"
-    endpoint: "http://192.168.1.2:8080"
+    endpoint: "http://localhost:8080"
     insecure: true
     timeout: 10s
     read_buffer_size: 123
@@ -50,6 +50,5 @@ exporters:
       max_interval: 60s
       max_elapsed_time: 10m
     compression: gzip
-    batch_timeout: 10s
-    send_batch_size: 20
-    #send_batch_max_size: 3
+    batch_timeout: 2s
+    send_batch_size: 400

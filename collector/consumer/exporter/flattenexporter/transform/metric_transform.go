@@ -16,7 +16,7 @@ func CreateFlattenMetrics(service *v1.Service, requestMetricArr []*flattenMetric
 		Metrics: requestMetricArr,
 	}
 	initMetricRequest := flattenMetrics.FlattenMetrics{
-		RequestMetrics: &requestMetrics,
+		RequestMetricByte: &requestMetrics,
 	}
 	return initMetricRequest
 }
@@ -25,8 +25,8 @@ func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.Reque
 	return []*flattenMetrics.RequestMetric{{
 		MetricType:        constant.MetricTypeRequest,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
-		MetricMap:         GenerateRequestMetricMap(gaugeGroup),
-		Labels:            GenerateRequestMetricLabels(gaugeGroup),
+		MetricMap:         generateRequestMetricMap(gaugeGroup),
+		Labels:            generateRequestMetricLabels(gaugeGroup),
 	},
 	}
 }
@@ -41,106 +41,144 @@ func GenerateXXMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flatten
 	}
 }
 
-func GenerateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func generateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
 	MetricMap := make(map[string]*flattenMetrics.Metric)
 	gaugeMap := make(map[string]*model.Gauge)
 	for _, gauge := range gaugeGroup.Values {
 		gaugeMap[gauge.Name] = gauge
 	}
-	MetricMap[constant.RequestIo] = GenerateMetric(constant.RequestIo, gaugeGroup, gaugeMap)
-	MetricMap[constant.ResponseIo] = GenerateMetric(constant.ResponseIo, gaugeGroup, gaugeMap)
-	MetricMap[constant.RequestDurationTime] = GenerateMetric(constant.RequestDurationTime, gaugeGroup, gaugeMap)
-	MetricMap[constant.Error] = GenerateMetric(constant.Error, gaugeGroup, gaugeMap)
-	MetricMap[constant.Slow] = GenerateMetric(constant.Slow, gaugeGroup, gaugeMap)
-	MetricMap[constant.RequestTotalTime] = GenerateMetric(constant.RequestTotalTime, gaugeGroup, gaugeMap)
-	MetricMap[constant.StatusCode1xxTotal] = GenerateMetric(constant.StatusCode1xxTotal, gaugeGroup, gaugeMap)
-	MetricMap[constant.StatusCode2xxTotal] = GenerateMetric(constant.StatusCode2xxTotal, gaugeGroup, gaugeMap)
-	MetricMap[constant.StatusCode3xxTotal] = GenerateMetric(constant.StatusCode3xxTotal, gaugeGroup, gaugeMap)
-	MetricMap[constant.StatusCode4xxTotal] = GenerateMetric(constant.StatusCode4xxTotal, gaugeGroup, gaugeMap)
-	MetricMap[constant.StatusCode5xxTotal] = GenerateMetric(constant.StatusCode5xxTotal, gaugeGroup, gaugeMap)
+	MetricMap[constant.RequestIo] = generateMetric(constant.RequestIo, gaugeGroup, gaugeMap)
+	MetricMap[constant.ResponseIo] = generateMetric(constant.ResponseIo, gaugeGroup, gaugeMap)
+	MetricMap[constant.RequestDurationTime] = generateMetric(constant.RequestTotalTime, gaugeGroup, gaugeMap)
+	MetricMap[constant.Error] = generateMetric(constant.Error, gaugeGroup, gaugeMap)
+	MetricMap[constant.Slow] = generateMetric(constant.Slow, gaugeGroup, gaugeMap)
+	MetricMap[constant.StatusCode1xxTotal] = generateMetric(constant.StatusCode1xxTotal, gaugeGroup, gaugeMap)
+	MetricMap[constant.StatusCode2xxTotal] = generateMetric(constant.StatusCode2xxTotal, gaugeGroup, gaugeMap)
+	MetricMap[constant.StatusCode3xxTotal] = generateMetric(constant.StatusCode3xxTotal, gaugeGroup, gaugeMap)
+	MetricMap[constant.StatusCode4xxTotal] = generateMetric(constant.StatusCode4xxTotal, gaugeGroup, gaugeMap)
+	MetricMap[constant.StatusCode5xxTotal] = generateMetric(constant.StatusCode5xxTotal, gaugeGroup, gaugeMap)
 	return MetricMap
 }
 
+func GenerateConnectMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flattenMetrics.RequestMetric {
+	return []*flattenMetrics.RequestMetric{{
+		MetricType:        metricType,
+		StartTimeUnixNano: gaugeGroup.Timestamp,
+		MetricMap:         GenerateConnectMetricMap(gaugeGroup),
+		Labels:            GenerateMetricLabels(gaugeGroup),
+	},
+	}
+}
 func GenerateMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
 	metricMap := make(map[string]*flattenMetrics.Metric)
 	for _, gauge := range gaugeGroup.Values {
 		if gauge.DataType() == model.HistogramGaugeType {
-			metricMap[gauge.Name] = GenerateHistogramMetric(gauge.Name, gauge)
+			metricMap[gauge.Name] = generateHistogramMetric(gauge.Name, gauge)
 		}
 		if gauge.DataType() == model.IntGaugeType {
-			metricMap[gauge.Name] = GenerateSumMetric(gauge.Name, gauge)
+			metricMap[gauge.Name] = generateSumMetric(gauge.Name, gauge)
 		}
 	}
 	return metricMap
 }
-func GenerateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
+
+func GenerateConnectMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+	metricMap := make(map[string]*flattenMetrics.Metric)
+	labelMap := gaugeGroup.Labels
+	for _, gauge := range gaugeGroup.Values {
+		if gauge.Name == constlabels.KindlingTcpConnectTotal {
+			if gauge.DataType() == model.IntGaugeType {
+				if !labelMap.GetBoolValue(constlabels.Success) {
+					metricMap[constant.ConnectFail] = generateSumMetric(constant.ConnectFail, gauge)
+				}
+			}
+		}
+		if gauge.Name == constlabels.KindlingTcpConnectDurationNanosecondsTotal {
+			if gauge.DataType() == model.HistogramGaugeType {
+				metricMap[constant.ConnectTime] = generateHistogramMetric(constant.ConnectTime, gauge)
+			}
+		}
+	}
+	return metricMap
+}
+
+func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
 	switch key {
-	case constant.RequestIo:
-		return GenerateSumMetric(key, gaugeMap[key])
-	case constant.ResponseIo:
-		return GenerateSumMetric(key, gaugeMap[key])
+	case constant.RequestIo, constant.ResponseIo:
+		return generateSumMetric(key, gaugeMap[key])
 	case constant.RequestTotalTime:
-		return GenerateSumMetric(key, gaugeMap[key])
-	case constant.RequestDurationTime:
-		return GenerateHistogramMetric(key, gaugeMap[key])
+		if gaugeMap[key].DataType() == model.HistogramGaugeType {
+			return generateHistogramMetric(key, gaugeMap[key])
+		} else {
+			return generateSumMetric(key, gaugeMap[key])
+		}
 	case constant.Slow:
-		if gaugeMap[constvalues.RequestTotalTime].GetInt().Value > 500 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+		isSlow := gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow)
+		if isSlow {
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
+
 	case constant.Error:
-		if gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode) > 400 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+		isError := gaugeGroup.Labels.GetBoolValue(constlabels.IsError)
+		if isError {
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
+
 	case constant.StatusCode1xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 200 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
 	case constant.StatusCode2xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 300 && httpCode >= 200 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
 	case constant.StatusCode3xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 400 && httpCode >= 300 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
 	case constant.StatusCode4xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 500 && httpCode >= 400 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
 	case constant.StatusCode5xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode >= 500 {
-			return GenerateSumMetric(key, gaugeMap[constvalues.RequestCount])
+			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return GenerateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntGauge(key, 0))
 		}
+
 	default:
 		break
 	}
 	return nil
 }
 
-func GenerateSumMetric(key string, value *model.Gauge) *flattenMetrics.Metric {
-	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value.GetInt().Value}}}
+func generateRequestCountMetric(key string, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
+	if gaugeMap[constant.RequestTotalTime].DataType() == model.HistogramGaugeType {
+		return generateSumMetric(key, model.NewIntGauge(key, int64(gaugeMap[constant.RequestTotalTime].GetHistogram().Count)))
+	} else {
+		return generateSumMetric(key, gaugeMap[constvalues.RequestCount])
+	}
 }
 
-func GenerateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Metric {
+func generateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Metric {
 	bucketCountsSlice := make([]float64, len(gauge.GetHistogram().ExplicitBoundaries))
 	bucketCountsFloatSlice := gauge.GetHistogram().ExplicitBoundaries
 	for i, value := range bucketCountsFloatSlice {
@@ -154,12 +192,14 @@ func GenerateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Met
 	}}}
 }
 
-func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
-	metricLabels := make([]v1.StringKeyValue, 0)
+func generateSumMetric(key string, value *model.Gauge) *flattenMetrics.Metric {
+	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value.GetInt().Value}}}
+}
+
+func generateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+	metricLabels := make([]v1.StringKeyValue, 0, 27)
 	labelMap := gaugeGroup.Labels
 	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
-	//GenerateStringKeyValueSlice(constant.SrcMasterIP, "SrcMasterIP", &metricLabels)
-	//GenerateStringKeyValueSlice(constant.DstMasterIP, "DstMasterIP", &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcWorkloadKind, labelMap.GetStringValue(constlabels.SrcWorkloadKind), &metricLabels)
@@ -175,39 +215,48 @@ func GenerateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	GenerateStringKeyValueSlice(constant.DstWorkloadName, labelMap.GetStringValue(constlabels.DstWorkloadName), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstService, labelMap.GetStringValue(constlabels.DstService), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DnatIp, labelMap.GetStringValue(constlabels.DnatIp), &metricLabels)
+
 	//GenerateStringKeyValueSlice(constant.DstServiceIp, "DstServiceIp", &metricLabels)
 	//GenerateStringKeyValueSlice(constant.DstServicePort, "DstServicePort", &metricLabels)
-	//GenerateStringKeyValueSlice(constant.DstPodIp, "DstPodIp", &metricLabels)
-	//GenerateStringKeyValueSlice(constant.DstPodPort, "DstPodPort", &metricLabels)
+	dnatIp := labelMap.GetStringValue(constlabels.DnatIp)
+	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
+	GenerateStringKeyValueSlice(constant.DNatIp, dnatIp, &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), &metricLabels)
 	GenerateStringKeyValueSlice(constant.IsServer, strconv.FormatBool(labelMap.GetBoolValue(constlabels.IsServer)), &metricLabels)
-	//GenerateStringKeyValueSlice(constant.HttpHost, "HttpHost", &metricLabels)
-	DnatIp := labelMap.GetStringValue(constlabels.DnatIp)
-	if DnatIp != "" {
-		GenerateStringKeyValueSlice(constant.DstPodIp, DnatIp, &metricLabels)
+
+	if dnatIp != "" {
+		GenerateStringKeyValueSlice(constant.DstServiceIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodIp, dnatIp, &metricLabels)
 	} else {
 		GenerateStringKeyValueSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
 	}
 
-	DnatPort := labelMap.GetStringValue(constlabels.DnatPort)
-	if DnatPort != "" {
-		GenerateStringKeyValueSlice(constant.DstPodPort, DnatPort, &metricLabels)
+	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
+	if dnatPort != 0 {
+		GenerateStringKeyValueSlice(constant.DstServicePort, strconv.FormatInt(dnatPort, 10), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
 	} else {
-		GenerateStringKeyValueSlice(constant.DstPodPort, labelMap.GetStringValue(constlabels.DstPort), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), &metricLabels)
 	}
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
-	GenerateStringKeyValueSlice(constant.Protocol, labelMap.GetStringValue(protocol), &metricLabels)
-	var protocolKey string
-	if protocol == constvalues.ProtocolHttp || protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.ContentKey
+	GenerateStringKeyValueSlice(constant.Protocol, protocol, &metricLabels)
+	protocolKey := constlabels.ContentKey
+	if protocol == constvalues.ProtocolHttp {
 	}
+
 	if protocol == constvalues.ProtocolDns {
 		protocolKey = constlabels.DnsDomain
 	}
+
 	if protocol == constvalues.ProtocolKafka {
+		protocolKey = constlabels.KafkaTopic
+	}
+
+	if protocol == constvalues.ProtocolDubbo {
+	}
+
+	if protocol == constvalues.ProtocolMysql {
 		protocolKey = constlabels.KafkaTopic
 	}
 	GenerateStringKeyValueSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &metricLabels)

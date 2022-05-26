@@ -2,6 +2,7 @@ package flattenexporter
 
 import (
 	"context"
+	"go.uber.org/zap"
 
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/constant"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/transform"
@@ -23,14 +24,15 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 
 	batchTraceProcessor := (*e.batchProcessors)[constant.Traces]
 	batchMetricProcessor := (*e.batchProcessors)[constant.Metrics]
+	e.Telemetry.Logger.Info("GaugeGroup...." + gaugeGroup.String())
 	service := e.Config.GetServiceInstance()
 	switch gaugeGroup.Name {
 	case constnames.SingleNetRequestGaugeGroup:
 		singleTrace := transform.GenerateResourceSpans(gaugeGroup)
 		traceServiceRequest := transform.CreateExportTraceServiceRequest(singleTrace)
-		//to batchProcessor
 		err := batchTraceProcessor.ConsumeTraces(context.Background(), traceServiceRequest)
 		if err != nil {
+			e.Telemetry.Logger.Error("Failed to consume metrics single_net_request_gauge_group", zap.Error(err))
 			return err
 		}
 	case constnames.AggregatedNetRequestGaugeGroup:
@@ -38,14 +40,16 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 		metricServiceRequest := transform.CreateFlattenMetrics(service, requestMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
+			e.Telemetry.Logger.Error("Failed to consume metrics aggregated_net_request_gauge_group", zap.Error(err))
 			return err
 		}
 		//TCP 链接指标
 	case constnames.TcpStatsGaugeGroup:
-		tcpInuseMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeTcpInuse)
+		tcpInuseMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeTcpStats)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpInuseMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
+			e.Telemetry.Logger.Error("Failed to consume metrics tcp_metric_gauge_group", zap.Error(err))
 			return err
 		}
 	case constnames.PageFaultGaugeGroupName:
@@ -53,13 +57,15 @@ func (e *Cfg) Consume(gaugeGroup *model.GaugeGroup) error {
 		metricServiceRequest := transform.CreateFlattenMetrics(service, pageFaultMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
+			e.Telemetry.Logger.Error("Failed to consume metrics page_fault_metric_gauge_group", zap.Error(err))
 			return err
 		}
 	case constnames.ConnectGaugeGroupName:
-		connectMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeConnect)
+		connectMetric := transform.GenerateConnectMetric(gaugeGroup, constant.MetricTypeConnect)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, connectMetric)
 		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		if err != nil {
+			e.Telemetry.Logger.Error("Failed to consume metrics connect_metric_gauge_group", zap.Error(err))
 			return err
 		}
 	default:

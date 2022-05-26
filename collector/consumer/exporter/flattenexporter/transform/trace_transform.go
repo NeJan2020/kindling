@@ -41,68 +41,111 @@ func GenerateEvents(gaugeGroup *model.GaugeGroup) []*trace.Span_Event {
 }
 
 func GenerateAttributes(gaugeGroup *model.GaugeGroup) []v11.KeyValue {
-	keyValueSlice := make([]v11.KeyValue, 0)
+	keyValueSlice := make([]v11.KeyValue, 0, 50)
 	for _, gauge := range gaugeGroup.Values {
 		GenerateKeyValueIntSlice(gauge.Name, gauge.GetInt().Value, &keyValueSlice)
+		//{Name: connect_time, Value: 0}
+		//{Name: request_sent_time, Value: 9517}
+		//{Name: waiting_ttfb_time, Value: 499799900}
+		//{Name: content_download_time, Value: 79743}
+		//{Name: request_total_time, Value: 499889160}
+		//{Name: request_io, Value: 71}
+		//{Name: response_io, Value: 22}
 	}
 	labelMap := gaugeGroup.Labels
-
-	//TODO gaugeGroup还没加这个字段
-	//GenerateKeyValueBoolSlice(constant.IsConnectFail, labelMap.GetBoolValue(constant.IsConnectFail), &keyValueSlice)
+	isServer := labelMap.GetBoolValue(constlabels.IsServer)
+	GenerateKeyValueBoolSlice(constant.IsServer, isServer, &keyValueSlice)
 	GenerateKeyValueBoolSlice(constant.IsError, labelMap.GetBoolValue(constlabels.IsError), &keyValueSlice)
 	GenerateKeyValueBoolSlice(constant.IsSlow, labelMap.GetBoolValue(constlabels.IsSlow), &keyValueSlice)
-	GenerateKeyValueBoolSlice(constant.IsServer, labelMap.GetBoolValue(constlabels.IsServer), &keyValueSlice)
-
-	GenerateKeyValueIntSlice(constant.Timestamp, labelMap.GetIntValue(constlabels.Timestamp), &keyValueSlice)
-	GenerateKeyValueIntSlice(constant.Pid, labelMap.GetIntValue(constlabels.Pid), &keyValueSlice)
-	GenerateKeyValueIntSlice(constant.Status, labelMap.GetIntValue(constlabels.HttpStatusCode), &keyValueSlice)
-	GenerateKeyValueIntSlice(constant.SrcPort, labelMap.GetIntValue(constlabels.SrcPort), &keyValueSlice)
-	GenerateKeyValueIntSlice(constant.DstPort, labelMap.GetIntValue(constlabels.DstPort), &keyValueSlice)
-
+	//GenerateKeyValueBoolSlice(constant.IsConnectFail, labelMap.GetBoolValue(constlabels.IsConnectFail), &keyValueSlice)
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
 	GenerateKeyValueStringSlice(constant.APPProtocol, protocol, &keyValueSlice)
+
+	protocolKey := constlabels.ContentKey
+	var statusCode string
+	if protocol == constvalues.ProtocolHttp {
+		statusCode = constlabels.HttpStatusCode
+		GenerateTraceApp(constant.RequestAPP, labelMap, &keyValueSlice)
+		GenerateTraceApp(constant.ResponseAPP, labelMap, &keyValueSlice)
+	}
+
+	if protocol == constvalues.ProtocolDns {
+		statusCode = constlabels.DnsRcode
+		protocolKey = constlabels.DnsDomain
+		//GenerateKeyValueIntSlice(constant.DnsQueryTime, labelMap.GetIntValue(constlabels.DnsQueryTime), &keyValueSlice)
+		dnsRcode := labelMap.GetIntValue(constlabels.DnsRcode)
+		GenerateKeyValueIntSlice(constant.DNS_R_CODE, dnsRcode, &keyValueSlice)
+		GenerateKeyValueStringSlice(constant.DNS_DOMAIN, labelMap.GetStringValue(constlabels.DnsDomain), &keyValueSlice)
+	}
+
+	if protocol == constvalues.ProtocolKafka {
+		statusCode = constlabels.KafkaErrorCode
+		protocolKey = constlabels.KafkaTopic
+	}
+
+	if protocol == constvalues.ProtocolDubbo {
+		statusCode = constlabels.DubboErrorCode
+	}
+
+	if protocol == constvalues.ProtocolMysql {
+		protocolKey = constlabels.KafkaTopic
+		statusCode = constlabels.KafkaErrorCode
+	}
+
+	if statusCode != "" {
+		GenerateKeyValueIntSlice(constant.Status, labelMap.GetIntValue(statusCode), &keyValueSlice)
+	}
+	GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.Timestamp, labelMap.GetIntValue(constlabels.Timestamp), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcIp, labelMap.GetStringValue(constlabels.SrcIp), &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.SrcPort, labelMap.GetIntValue(constlabels.SrcPort), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcWorkloadKind, labelMap.GetStringValue(constlabels.SrcWorkloadKind), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcWorkloadName, labelMap.GetStringValue(constlabels.SrcWorkloadName), &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.SrcService, labelMap.GetStringValue(constlabels.SrcService), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcPod, labelMap.GetStringValue(constlabels.SrcPod), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcPodIp, labelMap.GetStringValue(constlabels.SrcIp), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &keyValueSlice)
-	GenerateKeyValueStringSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &keyValueSlice)
-
-	DnatIp := labelMap.GetStringValue(constlabels.DnatIp)
-	if DnatIp != "" {
-		GenerateKeyValueStringSlice(constant.DstPodIp, DnatIp, &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.DstPort, labelMap.GetIntValue(constlabels.DstPort), &keyValueSlice)
+	dnatIp := labelMap.GetStringValue(constlabels.DnatIp)
+	if dnatIp != "" {
+		GenerateKeyValueStringSlice(constant.DNatIp, dnatIp, &keyValueSlice)
+		GenerateKeyValueStringSlice(constant.DstServiceIp, labelMap.GetStringValue(constlabels.DstIp), &keyValueSlice)
+		GenerateKeyValueStringSlice(constant.DstPodIp, dnatIp, &keyValueSlice)
 	} else {
 		GenerateKeyValueStringSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), &keyValueSlice)
 	}
+	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
 
-	DnatPort := labelMap.GetStringValue(constlabels.DnatPort)
-	if DnatPort != "" {
-		GenerateKeyValueStringSlice(constant.DstPodPort, DnatPort, &keyValueSlice)
+	if dnatPort != 0 {
+		GenerateKeyValueIntSlice(constant.DNatPort, dnatPort, &keyValueSlice)
+		GenerateKeyValueIntSlice(constant.DstPodPort, dnatPort, &keyValueSlice)
+		GenerateKeyValueIntSlice(constant.DstServicePort, labelMap.GetIntValue(constlabels.DstPort), &keyValueSlice)
 	} else {
-		GenerateKeyValueStringSlice(constant.DstPodPort, labelMap.GetStringValue(constlabels.DstPort), &keyValueSlice)
+		GenerateKeyValueIntSlice(constant.DstPodPort, labelMap.GetIntValue(constlabels.DstPort), &keyValueSlice)
 	}
-
-	GenerateKeyValueStringSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), &keyValueSlice)
-
-	protocolKey := constlabels.ContentKey
-	/*if protocol == constvalues.ProtocolHttp || protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.ContentKey
-	}*/
-	if protocol == constvalues.ProtocolDns {
-		protocolKey = constlabels.DnsDomain
-	}
-	if protocol == constvalues.ProtocolKafka {
-		protocolKey = constlabels.KafkaTopic
-	}
-	GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &keyValueSlice)
-	GenerateKeyValueStringSlice(constant.ContainerId, labelMap.GetStringValue(constlabels.ContainerId), &keyValueSlice)
-	GenerateKeyValueStringSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.DstNode, labelMap.GetStringValue(constlabels.DstNode), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.DstNamespace, labelMap.GetStringValue(constlabels.DstNamespace), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.DstWorkloadKind, labelMap.GetStringValue(constlabels.DstWorkloadKind), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.DstWorkloadName, labelMap.GetStringValue(constlabels.DstWorkloadName), &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.DstService, labelMap.GetStringValue(constlabels.DstService), &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.Pid, labelMap.GetIntValue(constlabels.Pid), &keyValueSlice)
+	var containerId string
+	var containerName string
+	if isServer {
+		containerId = labelMap.GetStringValue(constlabels.DstContainerId)
+		containerName = labelMap.GetStringValue(constlabels.DstContainer)
+	} else {
+		containerId = labelMap.GetStringValue(constlabels.SrcContainerId)
+		containerName = labelMap.GetStringValue(constlabels.SrcContainer)
+	}
+	GenerateKeyValueStringSlice(constant.ContainerId, containerId, &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.ContainerName, containerName, &keyValueSlice)
+	//GenerateKeyValueIntSlice(constant.HTTPS_TLS, labelMap.GetIntValue(constlabels.HTTPS_TLS), &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.RequestPayload, labelMap.GetStringValue(constlabels.HttpRequestPayload), &keyValueSlice)
+	GenerateKeyValueStringSlice(constant.ResponsePayload, labelMap.GetStringValue(constlabels.HttpResponsePayload), &keyValueSlice)
+	//GenerateArrayValueSlice(constant.MESSAGE_CAPTURE, labelMap.GetStringValue(constlabels.HttpResponsePayload), &keyValueSlice)
 	return keyValueSlice
 }

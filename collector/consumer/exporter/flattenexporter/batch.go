@@ -206,18 +206,18 @@ type batchMetric struct {
 }
 
 func (bm *batchMetric) itemCount() int {
-	return len(bm.metricData.RequestMetrics.Metrics)
+	return len(bm.metricData.RequestMetricByte.Metrics)
 }
 
 func (bm *batchMetric) add(item interface{}) {
 	metrics := item.(flattenMetrics.FlattenMetrics)
-	newRequestMetricsCount := len(metrics.RequestMetrics.Metrics)
+	newRequestMetricsCount := len(metrics.RequestMetricByte.Metrics)
 	newMetricsCount := newRequestMetricsCount
 	if (newMetricsCount) == 0 {
 		return
 	}
 	bm.count += newMetricsCount
-	bm.metricData.RequestMetrics.Metrics = append(bm.metricData.RequestMetrics.Metrics, metrics.RequestMetrics.Metrics...)
+	bm.metricData.RequestMetricByte.Metrics = append(bm.metricData.RequestMetricByte.Metrics, metrics.RequestMetricByte.Metrics...)
 }
 
 func (bm *batchMetric) export(ctx context.Context, sendBatchMaxSize int) error {

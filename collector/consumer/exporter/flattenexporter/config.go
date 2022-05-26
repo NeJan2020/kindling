@@ -15,12 +15,10 @@
 package flattenexporter
 
 import (
-	"fmt"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/config"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/config/confighttp"
 	otlpcommon "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/common/v1"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/exporterhelper"
-	"net/url"
 	"os"
 	"time"
 )
@@ -68,20 +66,4 @@ func (cfg *Config) GetServiceInstance() *otlpcommon.Service {
 		}
 	}
 	return serviceInstance
-}
-
-func (cfg *Config) composeSignalURL(signalOverrideURL string, signalName string) (string, error) {
-	switch {
-	case signalOverrideURL != "":
-		_, err := url.Parse(signalOverrideURL)
-		if err != nil {
-			return "", fmt.Errorf("%s_endpoint must be a valid URL", signalName)
-		}
-		return signalOverrideURL, nil
-	case cfg.Endpoint == "":
-		return "", fmt.Errorf("either endpoint or %s_endpoint must be specified", signalName)
-	default:
-		endpoint := cfg.Endpoint
-		return endpoint + "/v1/" + signalName, nil
-	}
 }

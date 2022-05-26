@@ -80,11 +80,7 @@ processors:
     ticker_interval: 5
     aggregate_kind_map:
       request_total_time:
-        - kind: sum
-        - kind: avg
-          output_name: request_total_time_avg
-        - kind: count
-          output_name: request_count
+        - kind: histogram
       request_io:
         - kind: sum
       response_io:
@@ -155,7 +151,7 @@ exporters:
       max_elapsed_time: 10m
     compression: gzip
     batch_timeout: 10s
-    send_batch_size: 20
+    send_batch_size: 400
 observability:
   logger:
     console_level: info # debug,info,warn,error,none
