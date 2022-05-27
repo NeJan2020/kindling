@@ -96,7 +96,7 @@ func GenerateAttributes(gaugeGroup *model.GaugeGroup) []v11.KeyValue {
 		GenerateKeyValueIntSlice(constant.Status, labelMap.GetIntValue(statusCode), &keyValueSlice)
 	}
 	GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &keyValueSlice)
-	GenerateKeyValueIntSlice(constant.Timestamp, labelMap.GetIntValue(constlabels.Timestamp), &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.Timestamp, int64(gaugeGroup.Timestamp), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcIp, labelMap.GetStringValue(constlabels.SrcIp), &keyValueSlice)
 	GenerateKeyValueIntSlice(constant.SrcPort, labelMap.GetIntValue(constlabels.SrcPort), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &keyValueSlice)

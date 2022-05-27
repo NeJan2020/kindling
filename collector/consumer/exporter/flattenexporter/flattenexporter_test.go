@@ -33,12 +33,11 @@ func makeSingleGaugeGroup(i int) *model.GaugeGroup {
 			//{Name: response_io, Value: 22}
 		},
 		Labels:    model.NewAttributeMap(),
-		Timestamp: 19900909090,
+		Timestamp: 19900909090111111,
 	}
 	gaugesGroup.Labels.AddBoolValue(constlabels.IsSlow, true)
 	gaugesGroup.Labels.AddBoolValue(constlabels.IsError, true)
 	gaugesGroup.Labels.AddBoolValue(constlabels.IsServer, true)
-	gaugesGroup.Labels.AddIntValue(constlabels.Timestamp, 19900909090)
 	gaugesGroup.Labels.AddStringValue(constlabels.SrcIp, "test-SrcIp"+strconv.Itoa(i))
 	gaugesGroup.Labels.AddIntValue(constlabels.SrcPort, 8080)
 	gaugesGroup.Labels.AddStringValue(constlabels.SrcNode, "test-SrcNode"+strconv.Itoa(i))
@@ -90,7 +89,7 @@ func makeAggNetGaugeGroup(i int) *model.GaugeGroup {
 			model.NewIntGauge(constvalues.RequestIo, 4500),
 		},
 		Labels:    model.NewAttributeMap(),
-		Timestamp: 19900909090,
+		Timestamp: 1653630590614288940,
 	}
 	gaugesGroup.Labels.AddStringValue(constlabels.SrcNode, "test-SrcNode"+strconv.Itoa(i))
 	gaugesGroup.Labels.AddStringValue(constlabels.SrcNamespace, "test-SrcNamespace"+strconv.Itoa(i))
@@ -243,14 +242,14 @@ func InitFlattenExporter(t *testing.T) {
 	}
 	export := NewExporter(config, component.NewDefaultTelemetryTools())
 	for i := 0; i < 1; i++ {
-		//go export.Consume(makeSingleGaugeGroup(i))
+		go export.Consume(makeSingleGaugeGroup(i))
 		//time.Sleep(1 * time.Second)
 		//go export.Consume(makePageFaultGaugeGroup(i))
 	}
 
 	for i := 1; i < 2; i++ {
 		//go export.Consume(makeSingleGaugeGroup(i))
-		go export.Consume(makeAggNetGaugeGroup(i))
+		//go export.Consume(makeAggNetGaugeGroup(i))
 		//go export.Consume(makeTcpStatsGaugeGroup(i))
 		//go export.Consume(makePageFaultGaugeGroup(i))
 
