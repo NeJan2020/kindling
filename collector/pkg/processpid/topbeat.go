@@ -54,7 +54,7 @@ func SendPidPortBytime(interval time.Duration, endpoint string, masterIp string,
 
 	PublishAllPidPort(e, endpoint, masterIp)
 	procs.Pids = procs.Pids[0:0]
-	ticker := time.NewTicker(time.Duration(interval) * time.Second)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
