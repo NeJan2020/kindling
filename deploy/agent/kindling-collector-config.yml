@@ -136,6 +136,7 @@ exporters:
       collect_period: 15s
   flatten:
     master_ip: "yanshi_default_default"
+    #endpoint: "http://10.10.102.97:31476"
     endpoint: "http://127.0.0.1:8080"
     insecure: true
     timeout: 10s

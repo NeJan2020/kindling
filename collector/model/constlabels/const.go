@@ -105,8 +105,8 @@ const (
 
 	NetWorkAnalyzeGaugeGroup = "netAnalyzeGauges"
 
-	KindlingTcpConnectTotal                    = "kindling_tcp_connect_total"
-	KindlingTcpConnectDurationNanosecondsTotal = "kindling_tcp_connect_duration_nanoseconds_total"
+	KindlingTcpConnectTotal               = "kindling_tcp_connect_total"
+	KindlingTcpConnectDurationNanoseconds = "kindling_tcp_connect_duration_nanoseconds"
 
 	Success = "success"
 )

@@ -99,11 +99,17 @@ func newCfg(cfg interface{}, telemetry *component.TelemetryTools) (*Cfg, error) 
 
 func (e *Cfg) pushTraceData(ctx context.Context, request []byte) error {
 	traceUrl, _ := composeSignalURL(e.Config, e.Config.TracesEndpoint, constant.Traces)
+	if traceUrl != "" {
+		e.Telemetry.Logger.Info("traceUrl", zap.String("traceUrl", traceUrl))
+	}
 	return e.httpExport(ctx, traceUrl, request)
 }
 
 func (e *Cfg) pushMetricsData(ctx context.Context, request []byte) error {
 	metricUrl, _ := composeSignalURL(e.Config, e.Config.MetricsEndpoint, constant.Metrics)
+	if metricUrl != "" {
+		e.Telemetry.Logger.Info("metricUrl", zap.String("metricUrl", metricUrl))
+	}
 	return e.httpExport(ctx, metricUrl, request)
 }
 
@@ -115,8 +121,10 @@ func (e *Cfg) httpExport(ctx context.Context, url string, request []byte) error 
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header["serviceName"] = []string{e.Config.Endpoint}
 	//req.Header["functionId"] = []string{globalConfig.GetFunctionIdOfDataReceiver()}
+	e.Telemetry.Logger.Info("send data to url:" + url)
 	resp, err := e.client.Do(req)
 	if err != nil {
+		e.Telemetry.Logger.Info("send data to url:" + err.Error())
 		return fmt.Errorf("failed to make an HTTP request: %w", err)
 	}
 
@@ -128,6 +136,7 @@ func (e *Cfg) httpExport(ctx context.Context, url string, request []byte) error 
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		// Request is successful.
+		e.Telemetry.Logger.Info("send data to server successful")
 		return nil
 	}
 

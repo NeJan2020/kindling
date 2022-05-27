@@ -93,7 +93,7 @@ func GenerateConnectMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenM
 				}
 			}
 		}
-		if gauge.Name == constlabels.KindlingTcpConnectDurationNanosecondsTotal {
+		if gauge.Name == constlabels.KindlingTcpConnectDurationNanoseconds {
 			if gauge.DataType() == model.HistogramGaugeType {
 				metricMap[constant.ConnectTime] = generateHistogramMetric(constant.ConnectTime, gauge)
 			}
@@ -215,9 +215,6 @@ func generateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	GenerateStringKeyValueSlice(constant.DstWorkloadName, labelMap.GetStringValue(constlabels.DstWorkloadName), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstService, labelMap.GetStringValue(constlabels.DstService), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &metricLabels)
-
-	//GenerateStringKeyValueSlice(constant.DstServiceIp, "DstServiceIp", &metricLabels)
-	//GenerateStringKeyValueSlice(constant.DstServicePort, "DstServicePort", &metricLabels)
 	dnatIp := labelMap.GetStringValue(constlabels.DnatIp)
 	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DNatIp, dnatIp, &metricLabels)

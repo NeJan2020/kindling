@@ -185,7 +185,7 @@ func makeTcpMetricGaugeGroup(i int) *model.GaugeGroup {
 		Name: constnames.ConnectGaugeGroupName,
 		Values: []*model.Gauge{
 			model.NewIntGauge(constlabels.KindlingTcpConnectTotal, int64(i)),
-			model.NewHistogramGauge(constlabels.KindlingTcpConnectDurationNanosecondsTotal, &model.Histogram{
+			model.NewHistogramGauge(constlabels.KindlingTcpConnectDurationNanoseconds, &model.Histogram{
 				Sum:                15000,
 				Count:              10000,
 				ExplicitBoundaries: []int64{0, 100, 200, 500, 1000, 2000, 5000, 10000},
