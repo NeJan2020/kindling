@@ -67,7 +67,7 @@ func (a *TcpstatAnalyzer) handleTcp4(procRoot string, pid int, containerId strin
 		return fmt.Errorf("failure get tcp4 stats from pid[%d]: %v", pid, err)
 	}
 
-	gaugeGroup := newGaugeGroup(containerId, t)
+	gaugeGroup := newMetricGroup(containerId, t)
 	gaugeGroup.Labels.AddStringValue(constlabels.Mode, "tcp4")
 	var retError error
 	for _, nextConsumer := range a.consumers {
@@ -85,7 +85,7 @@ func (a *TcpstatAnalyzer) handleTcp6(procRoot string, pid int, containerId strin
 		return fmt.Errorf("failure get tcp6 stats from pid[%d]: %v", pid, err)
 	}
 
-	gaugeGroup := newGaugeGroup(containerId, t)
+	gaugeGroup := newMetricGroup(containerId, t)
 	gaugeGroup.Labels.AddStringValue(constlabels.Mode, "tcp6")
 	var retError error
 	for _, nextConsumer := range a.consumers {
@@ -97,23 +97,23 @@ func (a *TcpstatAnalyzer) handleTcp6(procRoot string, pid int, containerId strin
 	return retError
 }
 
-func newGaugeGroup(containerId string, t TcpStat) *model.GaugeGroup {
+func newMetricGroup(containerId string, t TcpStat) *model.DataGroup {
 	labels := model.NewAttributeMap()
 	labels.AddStringValue(constlabels.ContainerId, containerId)
-	var values = []*model.Gauge{
-		{Name: constvalues.TcpstatEstablished, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.Established)}}},
-		{Name: constvalues.TcpstatSynSent, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.SynSent)}}},
-		{Name: constvalues.TcpstatSynRecv, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.SynRecv)}}},
-		{Name: constvalues.TcpstatFinWait1, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.FinWait1)}}},
-		{Name: constvalues.TcpstatFinWait2, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.FinWait2)}}},
-		{Name: constvalues.TcpstatClose, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.Close)}}},
-		{Name: constvalues.TcpstatClosing, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.Closing)}}},
-		{Name: constvalues.TcpstatCloseWait, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.CloseWait)}}},
-		{Name: constvalues.TcpstatLastAck, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.LastAck)}}},
-		{Name: constvalues.TcpstatListen, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.Listen)}}},
-		{Name: constvalues.TcpstatTimeWait, Data: &model.Gauge_Int{Int: &model.Int{Value: int64(t.TimeWait)}}},
+	var values = []*model.Metric{
+		{Name: constvalues.TcpstatEstablished, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.Established)}}},
+		{Name: constvalues.TcpstatSynSent, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.SynSent)}}},
+		{Name: constvalues.TcpstatSynRecv, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.SynRecv)}}},
+		{Name: constvalues.TcpstatFinWait1, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.FinWait1)}}},
+		{Name: constvalues.TcpstatFinWait2, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.FinWait2)}}},
+		{Name: constvalues.TcpstatClose, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.Close)}}},
+		{Name: constvalues.TcpstatClosing, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.Closing)}}},
+		{Name: constvalues.TcpstatCloseWait, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.CloseWait)}}},
+		{Name: constvalues.TcpstatLastAck, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.LastAck)}}},
+		{Name: constvalues.TcpstatListen, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.Listen)}}},
+		{Name: constvalues.TcpstatTimeWait, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.TimeWait)}}},
 	}
-	gaugeGroup := model.NewGaugeGroup(constnames.TcpStatsGaugeGroup, labels, uint64(time.Now().UnixNano()), values...)
+	gaugeGroup := model.NewDataGroup(constnames.TcpStatsMetricGroup, labels, uint64(time.Now().UnixNano()), values...)
 	return gaugeGroup
 }
 

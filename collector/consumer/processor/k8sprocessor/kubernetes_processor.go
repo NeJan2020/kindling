@@ -60,12 +60,8 @@ func NewKubernetesProcessor(cfg interface{}, telemetry *component.TelemetryTools
 func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 	name := dataGroup.Name
 	switch name {
-	case constnames.NetRequestGaugeGroupName:
-		p.processNetRequestMetric(gaugeGroup)
-	case constnames.TcpGaugeGroupName:
-		p.processTcpMetric(gaugeGroup)
-	case constnames.TcpStatsGaugeGroup:
-		p.processTcpstatsMetric(gaugeGroup)
+	case constnames.TcpStatsMetricGroup:
+		p.processTcpstatsMetric(dataGroup)
 	case constnames.NetRequestMetricGroupName:
 		p.processNetRequestMetric(dataGroup)
 	case constnames.TcpMetricGroupName:
@@ -89,7 +85,7 @@ func (p *K8sMetadataProcessor) processTcpMetric(dataGroup *model.DataGroup) {
 	p.addK8sMetaDataViaIp(dataGroup.Labels)
 }
 
-func (p *K8sMetadataProcessor) processTcpstatsMetric(gaugeGroup *model.GaugeGroup) {
+func (p *K8sMetadataProcessor) processTcpstatsMetric(gaugeGroup *model.DataGroup) {
 	p.addK8sMetaDataForContainerLabel(gaugeGroup.Labels)
 }
 
