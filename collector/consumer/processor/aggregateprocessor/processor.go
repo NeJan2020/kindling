@@ -105,25 +105,25 @@ func (p *AggregateProcessor) runTicker() {
 	}
 }
 
-func (p *AggregateProcessor) Consume(gaugeGroup *model.GaugeGroup) error {
-	switch gaugeGroup.Name {
-	case constnames.NetRequestGaugeGroupName:
+func (p *AggregateProcessor) Consume(dataGroup *model.DataGroup) error {
+	switch dataGroup.Name {
+	case constnames.NetRequestMetricGroupName:
 		var abnormalDataErr error
 		// The abnormal recordersMap will be treated as trace in later processing.
 		// Must trace be merged into metrics in this place? Yes, because we have to generate histogram metrics,
 		// trace recordersMap should not be recorded again, otherwise the percentiles will be much higher.
-		if p.isSampled(gaugeGroup) {
-			gaugeGroup.Name = constnames.SingleNetRequestGaugeGroup
-			abnormalDataErr = p.nextConsumer.Consume(gaugeGroup)
+		if p.isSampled(dataGroup) {
+			dataGroup.Name = constnames.SingleNetRequestMetricGroup
+			abnormalDataErr = p.nextConsumer.Consume(dataGroup)
 		}
-		gaugeGroup.Name = constnames.AggregatedNetRequestGaugeGroup
-		p.aggregator.Aggregate(gaugeGroup, p.netRequestLabelSelectors)
+		dataGroup.Name = constnames.AggregatedNetRequestMetricGroup
+		p.aggregator.Aggregate(dataGroup, p.netRequestLabelSelectors)
 		return abnormalDataErr
-	case constnames.TcpGaugeGroupName:
-		p.aggregator.Aggregate(gaugeGroup, p.tcpLabelSelectors)
+	case constnames.TcpMetricGroupName:
+		p.aggregator.Aggregate(dataGroup, p.tcpLabelSelectors)
 		return nil
 	default:
-		p.aggregator.Aggregate(gaugeGroup, p.netRequestLabelSelectors)
+		p.aggregator.Aggregate(dataGroup, p.netRequestLabelSelectors)
 		return nil
 	}
 }
@@ -197,13 +197,13 @@ func newTcpLabelSelectors() *aggregator.LabelSelectors {
 	)
 }
 
-func (p *AggregateProcessor) isSampled(gaugeGroup *model.GaugeGroup) bool {
+func (p *AggregateProcessor) isSampled(dataGroup *model.DataGroup) bool {
 	randSeed := rand.Intn(100)
-	if isAbnormal(gaugeGroup) {
-		if (randSeed < p.cfg.SamplingRate.SlowData) && gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow) {
+	if isAbnormal(dataGroup) {
+		if (randSeed < p.cfg.SamplingRate.SlowData) && dataGroup.Labels.GetBoolValue(constlabels.IsSlow) {
 			return true
 		}
-		if (randSeed < p.cfg.SamplingRate.ErrorData) && gaugeGroup.Labels.GetBoolValue(constlabels.IsError) {
+		if (randSeed < p.cfg.SamplingRate.ErrorData) && dataGroup.Labels.GetBoolValue(constlabels.IsError) {
 			return true
 		}
 	} else {
@@ -214,8 +214,8 @@ func (p *AggregateProcessor) isSampled(gaugeGroup *model.GaugeGroup) bool {
 	return false
 }
 
-// shouldAggregate returns true if the gaugeGroup is slow or has errors.
-func isAbnormal(g *model.GaugeGroup) bool {
+// shouldAggregate returns true if the dataGroup is slow or has errors.
+func isAbnormal(g *model.DataGroup) bool {
 	return g.Labels.GetBoolValue(constlabels.IsSlow) || g.Labels.GetBoolValue(constlabels.IsError) ||
 		g.Labels.GetIntValue(constlabels.ErrorType) > constlabels.NoError
 }
