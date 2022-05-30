@@ -109,7 +109,7 @@ func generateMetric(key string, gaugeGroup *model.DataGroup, gaugeMap map[string
 		return generateSumMetric(key, gaugeMap[key])
 	case constant.RequestTotalTime:
 		if gaugeMap[key].DataType() == model.HistogramMetricType {
-			return generateHistogramMetric(key, gaugeMap[key])
+			return generateHistogramMetric(constant.RequestDurationTime, gaugeMap[key])
 		} else {
 			return generateSumMetric(key, gaugeMap[key])
 		}
