@@ -109,6 +109,7 @@ const (
 	KindlingTcpConnectDurationNanoseconds = "kindling_tcp_connect_duration_nanoseconds"
 
 	Success = "success"
+	NetWorkAnalyzeMetricGroup = "netAnalyzeMetrics"
 )
 const (
 	STR_EMPTY = ""

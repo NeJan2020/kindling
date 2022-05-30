@@ -1,13 +1,14 @@
 package transform
 
 import (
+	"strconv"
+
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/constant"
 	v1 "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/common/v1"
 	flattenMetrics "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/metrics/flatten"
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/model/constvalues"
-	"strconv"
 )
 
 func CreateFlattenMetrics(service *v1.Service, requestMetricArr []*flattenMetrics.RequestMetric) flattenMetrics.FlattenMetrics {
@@ -21,7 +22,7 @@ func CreateFlattenMetrics(service *v1.Service, requestMetricArr []*flattenMetric
 	return initMetricRequest
 }
 
-func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.RequestMetric {
+func GenerateRequestMetric(gaugeGroup *model.DataGroup) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
 		MetricType:        constant.MetricTypeRequest,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
@@ -31,7 +32,7 @@ func GenerateRequestMetric(gaugeGroup *model.GaugeGroup) []*flattenMetrics.Reque
 	}
 }
 
-func GenerateXXMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flattenMetrics.RequestMetric {
+func GenerateXXMetric(gaugeGroup *model.DataGroup, metricType int32) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
 		MetricType:        metricType,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
@@ -41,10 +42,10 @@ func GenerateXXMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flatten
 	}
 }
 
-func generateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func generateRequestMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMetrics.Metric {
 	MetricMap := make(map[string]*flattenMetrics.Metric)
-	gaugeMap := make(map[string]*model.Gauge)
-	for _, gauge := range gaugeGroup.Values {
+	gaugeMap := make(map[string]*model.Metric)
+	for _, gauge := range gaugeGroup.Metrics {
 		gaugeMap[gauge.Name] = gauge
 	}
 	MetricMap[constant.RequestIo] = generateMetric(constant.RequestIo, gaugeGroup, gaugeMap)
@@ -60,7 +61,7 @@ func generateRequestMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenM
 	return MetricMap
 }
 
-func GenerateConnectMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*flattenMetrics.RequestMetric {
+func GenerateConnectMetric(gaugeGroup *model.DataGroup, metricType int32) []*flattenMetrics.RequestMetric {
 	return []*flattenMetrics.RequestMetric{{
 		MetricType:        metricType,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
@@ -69,32 +70,32 @@ func GenerateConnectMetric(gaugeGroup *model.GaugeGroup, metricType int32) []*fl
 	},
 	}
 }
-func GenerateMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func GenerateMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMetrics.Metric {
 	metricMap := make(map[string]*flattenMetrics.Metric)
-	for _, gauge := range gaugeGroup.Values {
-		if gauge.DataType() == model.HistogramGaugeType {
+	for _, gauge := range gaugeGroup.Metrics {
+		if gauge.DataType() == model.HistogramMetricType {
 			metricMap[gauge.Name] = generateHistogramMetric(gauge.Name, gauge)
 		}
-		if gauge.DataType() == model.IntGaugeType {
+		if gauge.DataType() == model.IntMetricType {
 			metricMap[gauge.Name] = generateSumMetric(gauge.Name, gauge)
 		}
 	}
 	return metricMap
 }
 
-func GenerateConnectMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenMetrics.Metric {
+func GenerateConnectMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMetrics.Metric {
 	metricMap := make(map[string]*flattenMetrics.Metric)
 	labelMap := gaugeGroup.Labels
-	for _, gauge := range gaugeGroup.Values {
+	for _, gauge := range gaugeGroup.Metrics {
 		if gauge.Name == constlabels.KindlingTcpConnectTotal {
-			if gauge.DataType() == model.IntGaugeType {
+			if gauge.DataType() == model.IntMetricType {
 				if !labelMap.GetBoolValue(constlabels.Success) {
 					metricMap[constant.ConnectFail] = generateSumMetric(constant.ConnectFail, gauge)
 				}
 			}
 		}
 		if gauge.Name == constlabels.KindlingTcpConnectDurationNanoseconds {
-			if gauge.DataType() == model.HistogramGaugeType {
+			if gauge.DataType() == model.HistogramMetricType {
 				metricMap[constant.ConnectTime] = generateHistogramMetric(constant.ConnectTime, gauge)
 			}
 		}
@@ -102,12 +103,12 @@ func GenerateConnectMetricMap(gaugeGroup *model.GaugeGroup) map[string]*flattenM
 	return metricMap
 }
 
-func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
+func generateMetric(key string, gaugeGroup *model.DataGroup, gaugeMap map[string]*model.Metric) *flattenMetrics.Metric {
 	switch key {
 	case constant.RequestIo, constant.ResponseIo:
 		return generateSumMetric(key, gaugeMap[key])
 	case constant.RequestTotalTime:
-		if gaugeMap[key].DataType() == model.HistogramGaugeType {
+		if gaugeMap[key].DataType() == model.HistogramMetricType {
 			return generateHistogramMetric(key, gaugeMap[key])
 		} else {
 			return generateSumMetric(key, gaugeMap[key])
@@ -117,7 +118,7 @@ func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[strin
 		if isSlow {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 
 	case constant.Error:
@@ -125,7 +126,7 @@ func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[strin
 		if isError {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 
 	case constant.StatusCode1xxTotal:
@@ -133,35 +134,35 @@ func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[strin
 		if httpCode < 200 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 	case constant.StatusCode2xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 300 && httpCode >= 200 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 	case constant.StatusCode3xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 400 && httpCode >= 300 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 	case constant.StatusCode4xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode < 500 && httpCode >= 400 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 	case constant.StatusCode5xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
 		if httpCode >= 500 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
-			return generateSumMetric(key, model.NewIntGauge(key, 0))
+			return generateSumMetric(key, model.NewIntMetric(key, 0))
 		}
 
 	default:
@@ -170,15 +171,15 @@ func generateMetric(key string, gaugeGroup *model.GaugeGroup, gaugeMap map[strin
 	return nil
 }
 
-func generateRequestCountMetric(key string, gaugeMap map[string]*model.Gauge) *flattenMetrics.Metric {
-	if gaugeMap[constant.RequestTotalTime].DataType() == model.HistogramGaugeType {
-		return generateSumMetric(key, model.NewIntGauge(key, int64(gaugeMap[constant.RequestTotalTime].GetHistogram().Count)))
+func generateRequestCountMetric(key string, gaugeMap map[string]*model.Metric) *flattenMetrics.Metric {
+	if gaugeMap[constant.RequestTotalTime].DataType() == model.HistogramMetricType {
+		return generateSumMetric(key, model.NewIntMetric(key, int64(gaugeMap[constant.RequestTotalTime].GetHistogram().Count)))
 	} else {
 		return generateSumMetric(key, gaugeMap[constvalues.RequestCount])
 	}
 }
 
-func generateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Metric {
+func generateHistogramMetric(key string, gauge *model.Metric) *flattenMetrics.Metric {
 	bucketCountsSlice := make([]float64, len(gauge.GetHistogram().ExplicitBoundaries))
 	bucketCountsFloatSlice := gauge.GetHistogram().ExplicitBoundaries
 	for i, value := range bucketCountsFloatSlice {
@@ -192,11 +193,11 @@ func generateHistogramMetric(key string, gauge *model.Gauge) *flattenMetrics.Met
 	}}}
 }
 
-func generateSumMetric(key string, value *model.Gauge) *flattenMetrics.Metric {
+func generateSumMetric(key string, value *model.Metric) *flattenMetrics.Metric {
 	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value.GetInt().Value}}}
 }
 
-func generateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0, 27)
 	labelMap := gaugeGroup.Labels
 	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
@@ -260,7 +261,7 @@ func generateRequestMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyVal
 	return metricLabels
 }
 
-func GenerateMetricLabels(gaugeGroup *model.GaugeGroup) []v1.StringKeyValue {
+func GenerateMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0)
 	labelsMap := gaugeGroup.Labels.ToStringMap()
 	for k, v := range labelsMap {

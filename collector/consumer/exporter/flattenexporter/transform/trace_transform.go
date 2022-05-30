@@ -17,22 +17,22 @@ func CreateExportTraceServiceRequest(resourceSpans []*trace.ResourceSpans) flatt
 	return initTraceRequest
 }
 
-func GenerateResourceSpans(gaugeGroup *model.GaugeGroup) []*trace.ResourceSpans {
+func GenerateResourceSpans(gaugeGroup *model.DataGroup) []*trace.ResourceSpans {
 	return []*trace.ResourceSpans{{
 		InstrumentationLibrarySpans: GenerateInstrumentationLibrarySpans(gaugeGroup),
 	}}
 }
-func GenerateInstrumentationLibrarySpans(gaugeGroup *model.GaugeGroup) []*trace.InstrumentationLibrarySpans {
+func GenerateInstrumentationLibrarySpans(gaugeGroup *model.DataGroup) []*trace.InstrumentationLibrarySpans {
 	return []*trace.InstrumentationLibrarySpans{{
 		Spans: GenerateSpans(gaugeGroup),
 	}}
 }
-func GenerateSpans(gaugeGroup *model.GaugeGroup) []*trace.Span {
+func GenerateSpans(gaugeGroup *model.DataGroup) []*trace.Span {
 	return []*trace.Span{{
 		Events: GenerateEvents(gaugeGroup),
 	}}
 }
-func GenerateEvents(gaugeGroup *model.GaugeGroup) []*trace.Span_Event {
+func GenerateEvents(gaugeGroup *model.DataGroup) []*trace.Span_Event {
 	timestamp := gaugeGroup.Timestamp
 	return []*trace.Span_Event{{
 		TimeUnixNano: timestamp,
@@ -40,9 +40,9 @@ func GenerateEvents(gaugeGroup *model.GaugeGroup) []*trace.Span_Event {
 	}}
 }
 
-func GenerateAttributes(gaugeGroup *model.GaugeGroup) []v11.KeyValue {
+func GenerateAttributes(gaugeGroup *model.DataGroup) []v11.KeyValue {
 	keyValueSlice := make([]v11.KeyValue, 0, 50)
-	for _, gauge := range gaugeGroup.Values {
+	for _, gauge := range gaugeGroup.Metrics {
 		GenerateKeyValueIntSlice(gauge.Name, gauge.GetInt().Value, &keyValueSlice)
 		//{Name: connect_time, Value: 0}
 		//{Name: request_sent_time, Value: 9517}
