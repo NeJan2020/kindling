@@ -122,6 +122,9 @@ func (p *AggregateProcessor) Consume(dataGroup *model.DataGroup) error {
 	case constnames.TcpMetricGroupName:
 		p.aggregator.Aggregate(dataGroup, p.tcpLabelSelectors)
 		return nil
+	case constnames.TcpStatsMetricGroup:
+		abnormalDataErr := p.nextConsumer.Consume(dataGroup)
+		return abnormalDataErr
 	default:
 		p.aggregator.Aggregate(dataGroup, p.netRequestLabelSelectors)
 		return nil
