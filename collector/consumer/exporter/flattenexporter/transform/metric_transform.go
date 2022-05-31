@@ -222,21 +222,24 @@ func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValu
 	GenerateStringKeyValueSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), &metricLabels)
 	GenerateStringKeyValueSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), &metricLabels)
 	GenerateStringKeyValueSlice(constant.IsServer, strconv.FormatBool(labelMap.GetBoolValue(constlabels.IsServer)), &metricLabels)
-
+	var dstServiceIp = ""
+	var dstServicePort = ""
 	if dnatIp != "" {
-		GenerateStringKeyValueSlice(constant.DstServiceIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
+		dstServiceIp = labelMap.GetStringValue(constlabels.DstIp)
 		GenerateStringKeyValueSlice(constant.DstPodIp, dnatIp, &metricLabels)
 	} else {
 		GenerateStringKeyValueSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
 	}
-
+	GenerateStringKeyValueSlice(constant.DstServiceIp, dstServiceIp, &metricLabels)
 	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
 	if dnatPort != 0 {
-		GenerateStringKeyValueSlice(constant.DstServicePort, strconv.FormatInt(dnatPort, 10), &metricLabels)
+		dstServicePort = strconv.FormatInt(dnatPort, 10)
+
 		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
 	} else {
 		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), &metricLabels)
 	}
+	GenerateStringKeyValueSlice(constant.DstServicePort, dstServicePort, &metricLabels)
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
 	GenerateStringKeyValueSlice(constant.Protocol, protocol, &metricLabels)
 	protocolKey := constlabels.ContentKey
