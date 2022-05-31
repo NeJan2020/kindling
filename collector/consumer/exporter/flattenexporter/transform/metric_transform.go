@@ -77,7 +77,7 @@ func GenerateMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMetrics.M
 			metricMap[gauge.Name] = generateHistogramMetric(gauge.Name, gauge)
 		}
 		if gauge.DataType() == model.IntMetricType {
-			metricMap[gauge.Name] = generateSumMetric(gauge.Name, gauge)
+			metricMap[gauge.Name] = generateSumMetric(gauge.Name, gauge.GetInt().Value)
 		}
 	}
 	return metricMap
@@ -90,7 +90,7 @@ func GenerateConnectMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMe
 		if gauge.Name == constlabels.KindlingTcpConnectTotal {
 			if gauge.DataType() == model.IntMetricType {
 				if !labelMap.GetBoolValue(constlabels.Success) {
-					metricMap[constant.ConnectFail] = generateSumMetric(constant.ConnectFail, gauge)
+					metricMap[constant.ConnectFail] = generateSumMetric(constant.ConnectFail, gauge.GetInt().Value)
 				}
 			}
 		}
@@ -104,78 +104,81 @@ func GenerateConnectMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMe
 }
 
 func generateMetric(key string, gaugeGroup *model.DataGroup, gaugeMap map[string]*model.Metric) *flattenMetrics.Metric {
-	switch key {
-	case constant.RequestIo, constant.ResponseIo:
-		return generateSumMetric(key, gaugeMap[key])
-	case constant.RequestTotalTime:
-		if gaugeMap[key].DataType() == model.HistogramMetricType {
-			return generateHistogramMetric(constant.RequestDurationTime, gaugeMap[key])
-		} else {
-			return generateSumMetric(key, gaugeMap[key])
-		}
-	case constant.Slow:
-		isSlow := gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow)
-		if isSlow {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
+	metric, ok := gaugeMap[key]
+	if ok {
+		switch key {
+		case constant.RequestIo, constant.ResponseIo:
+			return generateSumMetric(key, metric.GetInt().Value)
+		case constant.RequestTotalTime:
+			if metric.DataType() == model.HistogramMetricType {
+				return generateHistogramMetric(constant.RequestDurationTime, metric)
+			} else {
+				return generateSumMetric(key, metric.GetInt().Value)
+			}
+		case constant.Slow:
+			isSlow := gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow)
+			if isSlow {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
 
-	case constant.Error:
-		isError := gaugeGroup.Labels.GetBoolValue(constlabels.IsError)
-		if isError {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
+		case constant.Error:
+			isError := gaugeGroup.Labels.GetBoolValue(constlabels.IsError)
+			if isError {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
 
-	case constant.StatusCode1xxTotal:
-		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode < 200 {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
-	case constant.StatusCode2xxTotal:
-		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode < 300 && httpCode >= 200 {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
-	case constant.StatusCode3xxTotal:
-		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode < 400 && httpCode >= 300 {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
-	case constant.StatusCode4xxTotal:
-		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode < 500 && httpCode >= 400 {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
-	case constant.StatusCode5xxTotal:
-		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode >= 500 {
-			return generateRequestCountMetric(key, gaugeMap)
-		} else {
-			return generateSumMetric(key, model.NewIntMetric(key, 0))
-		}
+		case constant.StatusCode1xxTotal:
+			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+			if httpCode < 200 {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
+		case constant.StatusCode2xxTotal:
+			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+			if httpCode < 300 && httpCode >= 200 {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
+		case constant.StatusCode3xxTotal:
+			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+			if httpCode < 400 && httpCode >= 300 {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
+		case constant.StatusCode4xxTotal:
+			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+			if httpCode < 500 && httpCode >= 400 {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
+		case constant.StatusCode5xxTotal:
+			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+			if httpCode >= 500 {
+				return generateRequestCountMetric(key, gaugeMap)
+			} else {
+				return generateSumMetric(key, 0)
+			}
 
-	default:
-		break
+		default:
+			break
+		}
 	}
 	return nil
 }
 
 func generateRequestCountMetric(key string, gaugeMap map[string]*model.Metric) *flattenMetrics.Metric {
 	if gaugeMap[constant.RequestTotalTime].DataType() == model.HistogramMetricType {
-		return generateSumMetric(key, model.NewIntMetric(key, int64(gaugeMap[constant.RequestTotalTime].GetHistogram().Count)))
+		return generateSumMetric(key, int64(gaugeMap[constant.RequestTotalTime].GetHistogram().Count))
 	} else {
-		return generateSumMetric(key, gaugeMap[constvalues.RequestCount])
+		return generateSumMetric(key, gaugeMap[constvalues.RequestCount].GetInt().Value)
 	}
 }
 
@@ -193,8 +196,8 @@ func generateHistogramMetric(key string, gauge *model.Metric) *flattenMetrics.Me
 	}}}
 }
 
-func generateSumMetric(key string, value *model.Metric) *flattenMetrics.Metric {
-	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value.GetInt().Value}}}
+func generateSumMetric(key string, value int64) *flattenMetrics.Metric {
+	return &flattenMetrics.Metric{Name: key, Data: &flattenMetrics.Metric_Sum{Sum: &flattenMetrics.Sum{Value: value}}}
 }
 
 func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
