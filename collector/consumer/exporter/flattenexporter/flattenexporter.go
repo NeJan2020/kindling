@@ -119,8 +119,6 @@ func (e *Cfg) httpExport(ctx context.Context, url string, request []byte) error 
 		return consumererror.Permanent(err)
 	}
 	req.Header.Set("Content-Type", "application/x-protobuf")
-	req.Header["serviceName"] = []string{e.Config.Endpoint}
-	//req.Header["functionId"] = []string{globalConfig.GetFunctionIdOfDataReceiver()}
 	e.Telemetry.Logger.Info("send data to url:" + url)
 	resp, err := e.client.Do(req)
 	if err != nil {
