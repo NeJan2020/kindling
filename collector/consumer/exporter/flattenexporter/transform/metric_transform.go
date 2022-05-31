@@ -232,9 +232,9 @@ func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValu
 	}
 	GenerateStringKeyValueSlice(constant.DstServiceIp, dstServiceIp, &metricLabels)
 	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
-	if dnatPort != 0 {
+	GenerateStringKeyValueSlice(constant.DNatPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
+	if dnatPort != -1 && dnatPort != 0 {
 		dstServicePort = strconv.FormatInt(dnatPort, 10)
-
 		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
 	} else {
 		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), &metricLabels)

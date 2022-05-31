@@ -118,7 +118,7 @@ func GenerateAttributes(gaugeGroup *model.DataGroup) []v11.KeyValue {
 	}
 	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
 
-	if dnatPort != 0 {
+	if dnatPort != -1 && dnatPort != 0 {
 		GenerateKeyValueIntSlice(constant.DNatPort, dnatPort, &keyValueSlice)
 		GenerateKeyValueIntSlice(constant.DstPodPort, dnatPort, &keyValueSlice)
 		GenerateKeyValueIntSlice(constant.DstServicePort, labelMap.GetIntValue(constlabels.DstPort), &keyValueSlice)
