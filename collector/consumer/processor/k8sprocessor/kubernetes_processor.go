@@ -60,8 +60,6 @@ func NewKubernetesProcessor(cfg interface{}, telemetry *component.TelemetryTools
 func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 	name := dataGroup.Name
 	switch name {
-	case constnames.TcpStatsMetricGroup:
-		p.processTcpstatsMetric(dataGroup)
 	case constnames.NetRequestMetricGroupName:
 		p.processNetRequestMetric(dataGroup)
 	case constnames.TcpMetricGroupName:
@@ -83,22 +81,6 @@ func (p *K8sMetadataProcessor) processNetRequestMetric(dataGroup *model.DataGrou
 
 func (p *K8sMetadataProcessor) processTcpMetric(dataGroup *model.DataGroup) {
 	p.addK8sMetaDataViaIp(dataGroup.Labels)
-}
-
-func (p *K8sMetadataProcessor) processTcpstatsMetric(gaugeGroup *model.DataGroup) {
-	p.addK8sMetaDataForContainerLabel(gaugeGroup.Labels)
-}
-
-func (p *K8sMetadataProcessor) addK8sMetaDataForContainerLabel(labelMap *model.AttributeMap) {
-	containerId := labelMap.GetStringValue(constlabels.ContainerId)
-	resInfo, ok := p.metadata.GetByContainerId(containerId)
-	if ok {
-		addContainerMetaInfoLabel(labelMap, resInfo)
-	} else {
-		labelMap.UpdateAddStringValue(constlabels.NodeIp, p.localNodeIp)
-		labelMap.UpdateAddStringValue(constlabels.Node, p.localNodeName)
-		labelMap.UpdateAddStringValue(constlabels.Namespace, constlabels.InternalClusterNamespace)
-	}
 }
 
 func (p *K8sMetadataProcessor) addK8sMetaDataForClientLabel(labelMap *model.AttributeMap) {
@@ -316,24 +298,6 @@ func (p *K8sMetadataProcessor) addK8sMetaDataViaIpDST(labelMap *model.AttributeM
 		labelMap.UpdateAddStringValue(constlabels.DstNamespace, constlabels.InternalClusterNamespace)
 	} else {
 		labelMap.UpdateAddStringValue(constlabels.DstNamespace, constlabels.ExternalClusterNamespace)
-	}
-}
-
-func addContainerMetaInfoLabel(labelMap *model.AttributeMap, containerInfo *kubernetes.K8sContainerInfo) {
-	labelMap.UpdateAddStringValue(constlabels.Container, containerInfo.Name)
-	labelMap.UpdateAddStringValue(constlabels.ContainerId, containerInfo.ContainerId)
-	addPodMetaInfoLabel(labelMap, containerInfo.RefPodInfo)
-}
-
-func addPodMetaInfoLabel(labelMap *model.AttributeMap, podInfo *kubernetes.K8sPodInfo) {
-	labelMap.UpdateAddStringValue(constlabels.Node, podInfo.NodeName)
-	labelMap.UpdateAddStringValue(constlabels.NodeIp, podInfo.NodeAddress)
-	labelMap.UpdateAddStringValue(constlabels.Namespace, podInfo.Namespace)
-	labelMap.UpdateAddStringValue(constlabels.WorkloadKind, podInfo.WorkloadKind)
-	labelMap.UpdateAddStringValue(constlabels.WorkloadName, podInfo.WorkloadName)
-	labelMap.UpdateAddStringValue(constlabels.Pod, podInfo.PodName)
-	if podInfo.ServiceInfo != nil {
-		labelMap.UpdateAddStringValue(constlabels.Service, podInfo.ServiceInfo.ServiceName)
 	}
 }
 

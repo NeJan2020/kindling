@@ -24,10 +24,10 @@ const (
 	// AggregatedNetRequestMetricGroup stands for the dataGroup after aggregation.
 	AggregatedNetRequestMetricGroup = "aggregated_net_request_metric_group"
 
+	TcpMetricGroupName  = "tcp_metric_metric_group"
+	NodeMetricGroupName = "node_metric_metric_group"
 	TcpStatsMetricGroup = "tcp_stats_metric_group"
 
-	TcpMetricGroupName       = "tcp_metric_metric_group"
-	NodeMetricGroupName      = "node_metric_metric_group"
 	PageFaultMetricGroupName = "pgft_metric_metric_group"
 	ConnectMetricGroupName   = "connect_metric_metric_group"
 	// TcpMetricGroupName  = "tcp_metric_metric_group"
