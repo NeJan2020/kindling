@@ -2,6 +2,7 @@ package flattenexporter
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -11,8 +12,8 @@ import (
 	"github.com/Kindling-project/kindling/collector/model/constnames"
 )
 
-func (e *Cfg) Consume(gaugeGroup *model.DataGroup) error {
-	if gaugeGroup == nil {
+func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
+	if dataGroup == nil {
 		return nil
 	}
 
@@ -25,52 +26,40 @@ func (e *Cfg) Consume(gaugeGroup *model.DataGroup) error {
 
 	batchTraceProcessor := (*e.batchProcessors)[constant.Traces]
 	batchMetricProcessor := (*e.batchProcessors)[constant.Metrics]
-	e.Telemetry.Logger.Info("GaugeGroup...." + gaugeGroup.String())
+	if ce := e.Telemetry.Logger.Check(zap.DebugLevel, "exporter receives a dataGroup: "); ce != nil {
+		ce.Write(
+			zap.String("dataGroup", dataGroup.String()),
+		)
+	}
 	service := e.Config.GetServiceInstance()
-	switch gaugeGroup.Name {
+	var err error
+	switch dataGroup.Name {
 	case constnames.SingleNetRequestMetricGroup:
-		singleTrace := transform.GenerateResourceSpans(gaugeGroup)
+		singleTrace := transform.GenerateResourceSpans(dataGroup)
 		traceServiceRequest := transform.CreateExportTraceServiceRequest(singleTrace)
-		err := batchTraceProcessor.ConsumeTraces(context.Background(), traceServiceRequest)
-		if err != nil {
-			e.Telemetry.Logger.Error("Failed to consume metrics single_net_request_gauge_group", zap.Error(err))
-			return err
-		}
+		err = batchTraceProcessor.ConsumeTraces(context.Background(), traceServiceRequest)
 	case constnames.AggregatedNetRequestMetricGroup:
-		requestMetric := transform.GenerateRequestMetric(gaugeGroup)
+		requestMetric := transform.GenerateRequestMetric(dataGroup)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, requestMetric)
-		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-		if err != nil {
-			e.Telemetry.Logger.Error("Failed to consume metrics aggregated_net_request_gauge_group", zap.Error(err))
-			return err
-		}
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 		//TCP 链接指标
 	case constnames.TcpStatsMetricGroup:
-		tcpInuseMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypeTcpStats)
+		tcpInuseMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStats)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpInuseMetric)
-		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-		if err != nil {
-			e.Telemetry.Logger.Error("Failed to consume metrics tcp_metric_gauge_group", zap.Error(err))
-			return err
-		}
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.PageFaultMetricGroupName:
-		pageFaultMetric := transform.GenerateXXMetric(gaugeGroup, constant.MetricTypePageFault)
+		pageFaultMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypePageFault)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, pageFaultMetric)
-		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-		if err != nil {
-			e.Telemetry.Logger.Error("Failed to consume metrics page_fault_metric_gauge_group", zap.Error(err))
-			return err
-		}
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.ConnectMetricGroupName:
-		connectMetric := transform.GenerateConnectMetric(gaugeGroup, constant.MetricTypeConnect)
+		connectMetric := transform.GenerateConnectMetric(dataGroup, constant.MetricTypeConnect)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, connectMetric)
-		err := batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-		if err != nil {
-			e.Telemetry.Logger.Error("Failed to consume metrics connect_metric_gauge_group", zap.Error(err))
-			return err
-		}
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	default:
-		return nil
+		err = fmt.Errorf("Flatten exporter can't support to export this DataGroup: %s", dataGroup.Name)
 	}
-	return nil
+	if err != nil {
+		e.Telemetry.Logger.Error("Failed to consume dataGroups", zap.String("DataGroupName", dataGroup.Name), zap.Error(err))
+	}
+	return err
 }
