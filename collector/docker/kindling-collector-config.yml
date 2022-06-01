@@ -98,11 +98,11 @@ processors:
         - kind: sum
       kindling_tcp_packet_loss_total:
         - kind: sum
-      kindling_tcp_connect_total:
-        - kind: sum
-      kindling_tcp_connect_duration_nanoseconds_total:
-        - kind: histogram
-        explicit_boundaries: [ 10e6, 20e6, 50e6, 80e6, 130e6, 200e6, 300e6, 400e6, 500e6, 700e6, 1000e6, 2000e6, 5000e6, 30000e6 ]
+          kindling_tcp_connect_total:
+            - kind: sum
+          kindling_tcp_connect_duration_nanoseconds_total:
+            - kind: histogram
+            explicit_boundaries: [ 10e6, 20e6, 50e6, 80e6, 130e6, 200e6, 300e6, 400e6, 500e6, 700e6, 1000e6, 2000e6, 5000e6, 30000e6 ]
     sampling_rate:
       normal_data: 0
       slow_data: 100
