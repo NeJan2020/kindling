@@ -87,7 +87,7 @@ processors:
     aggregate_kind_map:
       request_total_time:
         - kind: histogram
-          explicit_boundaries: [ 10e6, 20e6, 50e6, 80e6, 130e6, 200e6, 300e6, 400e6, 500e6, 700e6, 1000e6, 2000e6, 5000e6, 30000e6 ]
+          explicit_boundaries: [ 1e6,3e6,5e6,10e6, 20e6, 30e6,50e6, 100e6, 200e6,300e6, 500e6, 1000e6, 2000e6, 3000e6, 5000e6, 10000e6, 2000e6, 20000e6, 30000e6 ,50000e6]
       request_io:
         - kind: sum
       response_io:
@@ -152,12 +152,12 @@ exporters:
     endpoint: "http://127.0.0.1:8080"
     insecure: true
     timeout: 10s
-    read_buffer_size: 123
-    write_buffer_size: 345
+    read_buffer_size: 4096
+    write_buffer_size: 4096
     sending_queue:
       enabled: true
-      num_consumers: 2
-      queue_size: 10
+      num_consumers: 10
+      queue_size: 500
     retry_on_failure:
       enabled: true
       initial_interval: 10s

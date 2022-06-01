@@ -30,7 +30,10 @@ func (e *Consumer) ConsumeTraces(context context.Context, td flattenTraces.Expor
 		Service:            e.cfg.Config.GetServiceInstance(),
 		ResourceSpansBytes: make([][]byte, len(td.ResourceSpans)),
 	}
-	e.cfg.Telemetry.Logger.Info("ExportTraceServiceRequest size--------" + strconv.Itoa(len(td.ResourceSpans)))
+	if ce := e.cfg.Telemetry.Logger.Check(zap.DebugLevel, "ExportTraceServiceRequest"); ce != nil {
+		ce.Write(
+			zap.String("size", strconv.Itoa(len(td.ResourceSpans))))
+	}
 	for i := 0; i < len(td.ResourceSpans); i++ {
 		resourceSpanBytes, err := td.ResourceSpans[i].Marshal()
 		if err != nil {
@@ -48,7 +51,10 @@ func (e *Consumer) ConsumeTraces(context context.Context, td flattenTraces.Expor
 }
 
 func (e *Consumer) ConsumeMetrics(context context.Context, md flattenMetrics.FlattenMetrics) error {
-	e.cfg.Telemetry.Logger.Info("FlattenMetrics size--------" + strconv.Itoa(len(md.RequestMetricByte.Metrics)))
+	if ce := e.cfg.Telemetry.Logger.Check(zap.DebugLevel, "FlattenMetrics"); ce != nil {
+		ce.Write(
+			zap.String("size", strconv.Itoa(len(md.RequestMetricByte.Metrics))))
+	}
 	requestMetricsBytes, requestErr := md.RequestMetricByte.Marshal()
 	if requestErr != nil {
 		return requestErr

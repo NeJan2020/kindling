@@ -86,13 +86,8 @@ processors:
     ticker_interval: 5
     aggregate_kind_map:
       request_total_time:
-        - kind: sum
-        - kind: avg
-          output_name: request_total_time_avg
-        - kind: count
-          output_name: request_count
         - kind: histogram
-          explicit_boundaries: [ 10e6, 20e6, 50e6, 80e6, 130e6, 200e6, 300e6, 400e6, 500e6, 700e6, 1000e6, 2000e6, 5000e6, 30000e6 ]
+          explicit_boundaries: [ 1e6,3e6,5e6,10e6, 20e6, 30e6,50e6, 100e6, 200e6,300e6, 500e6, 1000e6, 2000e6, 3000e6, 5000e6, 10000e6, 2000e6, 20000e6, 30000e6 ,50000e6 ]
       request_io:
         - kind: sum
       response_io:
@@ -106,7 +101,8 @@ processors:
       kindling_tcp_connect_total:
         - kind: sum
       kindling_tcp_connect_duration_nanoseconds_total:
-        - kind: sum
+        - kind: histogram
+        explicit_boundaries: [ 10e6, 20e6, 50e6, 80e6, 130e6, 200e6, 300e6, 400e6, 500e6, 700e6, 1000e6, 2000e6, 5000e6, 30000e6 ]
     sampling_rate:
       normal_data: 0
       slow_data: 100

@@ -182,7 +182,7 @@ func makePageFaultDataGroup(i int) *model.DataGroup {
 
 func makeTcpMetricDataGroup(i int) *model.DataGroup {
 	MetricsGroup := &model.DataGroup{
-		Name: constnames.ConnectMetricGroupName,
+		Name: constnames.TcpConnectMetricGroupName,
 		Metrics: []*model.Metric{
 			model.NewIntMetric(constlabels.KindlingTcpConnectTotal, int64(i)),
 			model.NewHistogramMetric(constlabels.KindlingTcpConnectDurationNanoseconds, &model.Histogram{

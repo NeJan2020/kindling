@@ -181,12 +181,6 @@ func (bt *batchTraces) export(ctx context.Context, sendBatchMaxSize int) error {
 		bt.traceData = InitTraceRequest()
 		bt.count = 0
 	}
-
-	/*	for i := 0; i < len(req.ResourceSpans); i++ {
-		for j := 0; j < len(req.ResourceSpans[i].InstrumentationLibrarySpans); j++ {
-			fmt.Println(req.ResourceSpans[i].InstrumentationLibrarySpans[j].Spans[0].Events[0].Attributes[30].Value.GetValue())
-		}
-	}*/
 	return bt.nextConsumer.ConsumeTraces(ctx, req)
 }
 

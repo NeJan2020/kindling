@@ -91,3 +91,7 @@ func (c *TcpstatAnalyzer) Shutdown() error {
 func (c *TcpstatAnalyzer) Type() analyzer.Type {
 	return Tcpstat
 }
+
+func (a *TcpstatAnalyzer) ConsumableEvents() []string {
+	return nil
+}

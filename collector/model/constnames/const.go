@@ -29,9 +29,8 @@ const (
 
 	TcpMetricGroupName        = "tcp_metric_metric_group"
 	TcpConnectMetricGroupName = "tcp_connect_metric_group"
-	NodeMetricGroupName = "node_metric_metric_group"
-	TcpStatsMetricGroup = "tcp_stats_metric_group"
+	NodeMetricGroupName       = "node_metric_metric_group"
+	TcpStatsMetricGroup       = "tcp_stats_metric_group"
 
 	PageFaultMetricGroupName = "pgft_metric_metric_group"
-	ConnectMetricGroupName   = "tcp_connect_metric_group"
 )
