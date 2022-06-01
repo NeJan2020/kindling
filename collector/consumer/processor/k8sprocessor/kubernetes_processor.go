@@ -104,15 +104,36 @@ func (p *K8sMetadataProcessor) processTcpMetric(dataGroup *model.DataGroup) {
 func (p *K8sMetadataProcessor) addK8sMetaDataForClientLabel(labelMap *model.AttributeMap) {
 	// add metadata for src
 	containerId := labelMap.GetStringValue(constlabels.ContainerId)
-	labelMap.UpdateAddStringValue(constlabels.SrcContainerId, containerId)
-	resInfo, ok := p.metadata.GetByContainerId(containerId)
-	if ok {
-		addContainerMetaInfoLabelSRC(labelMap, resInfo)
+	if containerId != "" {
+		labelMap.UpdateAddStringValue(constlabels.SrcContainerId, containerId)
+		resInfo, ok := p.metadata.GetByContainerId(containerId)
+		if ok {
+			addContainerMetaInfoLabelSRC(labelMap, resInfo)
+		} else {
+			labelMap.UpdateAddStringValue(constlabels.SrcNodeIp, p.localNodeIp)
+			labelMap.UpdateAddStringValue(constlabels.SrcNode, p.localNodeName)
+			labelMap.UpdateAddStringValue(constlabels.SrcNamespace, constlabels.InternalClusterNamespace)
+		}
 	} else {
-		labelMap.UpdateAddStringValue(constlabels.SrcNodeIp, p.localNodeIp)
-		labelMap.UpdateAddStringValue(constlabels.SrcNode, p.localNodeName)
-		labelMap.UpdateAddStringValue(constlabels.SrcNamespace, constlabels.InternalClusterNamespace)
+		srcIp := labelMap.GetStringValue(constlabels.SrcIp)
+		if srcIp == loopbackIp {
+			labelMap.UpdateAddStringValue(constlabels.SrcNodeIp, p.localNodeIp)
+			labelMap.UpdateAddStringValue(constlabels.SrcNode, p.localNodeName)
+		}
+		podInfo, ok := p.metadata.GetPodByIp(srcIp)
+		if ok {
+			addPodMetaInfoLabelSRC(labelMap, podInfo)
+		} else {
+			if nodeName, ok := p.metadata.GetNodeNameByIp(srcIp); ok {
+				labelMap.UpdateAddStringValue(constlabels.SrcNodeIp, srcIp)
+				labelMap.UpdateAddStringValue(constlabels.SrcNode, nodeName)
+				labelMap.UpdateAddStringValue(constlabels.SrcNamespace, constlabels.InternalClusterNamespace)
+			} else {
+				labelMap.UpdateAddStringValue(constlabels.SrcNamespace, constlabels.ExternalClusterNamespace)
+			}
+		}
 	}
+
 	// add metadata for dst
 	dstIp := labelMap.GetStringValue(constlabels.DstIp)
 	if dstIp == loopbackIp {
