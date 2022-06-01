@@ -52,6 +52,8 @@ const (
 
 	Mode = "mode"
 
+	Errno           = "errno"
+	Success         = "success"
 	RequestContent  = "request_content"
 	ResponseContent = "response_content"
 	StatusCode      = "status_code"
@@ -109,7 +111,6 @@ const (
 	KindlingTcpConnectTotal               = "kindling_tcp_connect_total"
 	KindlingTcpConnectDurationNanoseconds = "kindling_tcp_connect_duration_nanoseconds"
 
-	Success = "success"
 )
 const (
 	STR_EMPTY = ""
