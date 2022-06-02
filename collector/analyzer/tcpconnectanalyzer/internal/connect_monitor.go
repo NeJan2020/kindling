@@ -143,6 +143,7 @@ func (c *ConnectMonitor) ReadInTcpConnect(event *model.KindlingEvent) (*Connecti
 		c.connMap[connKey] = connStats
 	} else {
 		// Not possible to enter this branch
+		c.logger.Info("Receive another unexpected tcp_connect event", zap.String("connKey", connKey.String()))
 		connStats.EndTimestamp = event.Timestamp
 		connStats.Code = int(retValueInt)
 	}
@@ -214,11 +215,12 @@ func (c *ConnectMonitor) TrimConnectionsWithTcpStat(waitForEventSecond int) []*C
 	// Only scan once for each pid
 	pidTcpStateMap := make(map[uint32]NetSocketStateMap)
 	waitForEventNano := int64(waitForEventSecond) * 1000000000
+	timeNow := time.Now().UnixNano()
 	for key, connStat := range c.connMap {
 		if connStat.pid == 0 {
 			continue
 		}
-		if time.Now().UnixNano()-int64(connStat.InitialTimestamp) < waitForEventNano {
+		if timeNow-int64(connStat.InitialTimestamp) < waitForEventNano {
 			// Still waiting for other events
 			continue
 		}
