@@ -57,7 +57,7 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpMetricGroupName:
 	default:
-		err = fmt.Errorf("Flatten exporter can't support to export this DataGroup: %s", dataGroup.Name)
+		err = fmt.Errorf("flatten exporter can't support to export this DataGroup: %s", dataGroup.Name)
 	}
 	if err != nil {
 		e.Telemetry.Logger.Error("Failed to consume dataGroups", zap.String("DataGroupName", dataGroup.Name), zap.Error(err))
