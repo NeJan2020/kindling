@@ -203,7 +203,7 @@ func generateSumMetric(key string, value int64) *flattenMetrics.Metric {
 func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0, 27)
 	labelMap := gaugeGroup.Labels
-	generateK8sLabels(labelMap, metricLabels)
+	generateK8sLabels(labelMap, &metricLabels)
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
 	GenerateStringKeyValueSlice(constant.Protocol, protocol, &metricLabels)
 	protocolKey := constlabels.ContentKey
@@ -228,53 +228,53 @@ func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValu
 	return metricLabels
 }
 
-func generateK8sLabels(labelMap *model.AttributeMap, metricLabels []v1.StringKeyValue) {
-	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcWorkloadKind, labelMap.GetStringValue(constlabels.SrcWorkloadKind), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcWorkloadName, labelMap.GetStringValue(constlabels.SrcWorkloadName), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcService, labelMap.GetStringValue(constlabels.SrcService), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcPod, labelMap.GetStringValue(constlabels.SrcPod), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcContainer, labelMap.GetStringValue(constlabels.SrcContainer), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcContainerId, labelMap.GetStringValue(constlabels.SrcContainerId), &metricLabels)
-	GenerateStringKeyValueSlice(constant.SrcIp, labelMap.GetStringValue(constlabels.SrcIp), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstNode, labelMap.GetStringValue(constlabels.DstNode), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstNamespace, labelMap.GetStringValue(constlabels.DstNamespace), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstWorkloadKind, labelMap.GetStringValue(constlabels.DstWorkloadKind), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstWorkloadName, labelMap.GetStringValue(constlabels.DstWorkloadName), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstService, labelMap.GetStringValue(constlabels.DstService), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), &metricLabels)
+func generateK8sLabels(labelMap *model.AttributeMap, metricLabelsAddr *[]v1.StringKeyValue) {
+	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcWorkloadKind, labelMap.GetStringValue(constlabels.SrcWorkloadKind), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcWorkloadName, labelMap.GetStringValue(constlabels.SrcWorkloadName), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcService, labelMap.GetStringValue(constlabels.SrcService), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcPod, labelMap.GetStringValue(constlabels.SrcPod), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcContainer, labelMap.GetStringValue(constlabels.SrcContainer), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcContainerId, labelMap.GetStringValue(constlabels.SrcContainerId), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.SrcIp, labelMap.GetStringValue(constlabels.SrcIp), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstNode, labelMap.GetStringValue(constlabels.DstNode), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstNamespace, labelMap.GetStringValue(constlabels.DstNamespace), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstWorkloadKind, labelMap.GetStringValue(constlabels.DstWorkloadKind), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstWorkloadName, labelMap.GetStringValue(constlabels.DstWorkloadName), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstService, labelMap.GetStringValue(constlabels.DstService), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstPod, labelMap.GetStringValue(constlabels.DstPod), metricLabelsAddr)
 	dnatIp := labelMap.GetStringValue(constlabels.DnatIp)
-	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DNatIp, dnatIp, &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), &metricLabels)
-	GenerateStringKeyValueSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), &metricLabels)
-	GenerateStringKeyValueSlice(constant.IsServer, strconv.FormatBool(labelMap.GetBoolValue(constlabels.IsServer)), &metricLabels)
+	GenerateStringKeyValueSlice(constant.DstIp, labelMap.GetStringValue(constlabels.DstIp), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DNatIp, dnatIp, metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstContainer, labelMap.GetStringValue(constlabels.DstContainer), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.DstContainerId, labelMap.GetStringValue(constlabels.DstContainerId), metricLabelsAddr)
+	GenerateStringKeyValueSlice(constant.IsServer, strconv.FormatBool(labelMap.GetBoolValue(constlabels.IsServer)), metricLabelsAddr)
 	var dstServiceIp = ""
 	var dstServicePort = ""
 	if dnatIp != "" {
 		dstServiceIp = labelMap.GetStringValue(constlabels.DstIp)
-		GenerateStringKeyValueSlice(constant.DstPodIp, dnatIp, &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodIp, dnatIp, metricLabelsAddr)
 	} else {
-		GenerateStringKeyValueSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodIp, labelMap.GetStringValue(constlabels.DstIp), metricLabelsAddr)
 	}
-	GenerateStringKeyValueSlice(constant.DstServiceIp, dstServiceIp, &metricLabels)
+	GenerateStringKeyValueSlice(constant.DstServiceIp, dstServiceIp, metricLabelsAddr)
 	dnatPort := labelMap.GetIntValue(constlabels.DnatPort)
-	GenerateStringKeyValueSlice(constant.DNatPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
+	GenerateStringKeyValueSlice(constant.DNatPort, strconv.FormatInt(dnatPort, 10), metricLabelsAddr)
 	if dnatPort != -1 && dnatPort != 0 {
 		dstServicePort = strconv.FormatInt(dnatPort, 10)
-		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(dnatPort, 10), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(dnatPort, 10), metricLabelsAddr)
 	} else {
-		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), &metricLabels)
+		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), metricLabelsAddr)
 	}
-	GenerateStringKeyValueSlice(constant.DstServicePort, dstServicePort, &metricLabels)
+	GenerateStringKeyValueSlice(constant.DstServicePort, dstServicePort, metricLabelsAddr)
 }
 
 func GenerateConnectMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0, 25)
 	labelsMap := gaugeGroup.Labels
-	generateK8sLabels(labelsMap, metricLabels)
+	generateK8sLabels(labelsMap, &metricLabels)
 	return metricLabels
 }
 
