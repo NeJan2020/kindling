@@ -272,7 +272,7 @@ func generateK8sLabels(labelMap *model.AttributeMap, metricLabels []v1.StringKey
 }
 
 func GenerateConnectMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
-	metricLabels := make([]v1.StringKeyValue, 0)
+	metricLabels := make([]v1.StringKeyValue, 0, 25)
 	labelsMap := gaugeGroup.Labels
 	generateK8sLabels(labelsMap, metricLabels)
 	return metricLabels

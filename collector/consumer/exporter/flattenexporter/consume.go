@@ -52,7 +52,6 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		metricServiceRequest := transform.CreateFlattenMetrics(service, pageFaultMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpConnectMetricGroupName:
-		e.Telemetry.Logger.Info("TcpConnectMetricGroupName", zap.String("TcpConnectMetricGroupName", dataGroup.String()))
 		connectMetric := transform.GenerateConnectMetric(dataGroup, constant.MetricTypeConnect)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, connectMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
