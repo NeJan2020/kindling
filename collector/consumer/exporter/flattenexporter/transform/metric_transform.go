@@ -66,7 +66,7 @@ func GenerateConnectMetric(gaugeGroup *model.DataGroup, metricType int32) []*fla
 		MetricType:        metricType,
 		StartTimeUnixNano: gaugeGroup.Timestamp,
 		MetricMap:         GenerateConnectMetricMap(gaugeGroup),
-		Labels:            GenerateMetricLabels(gaugeGroup),
+		Labels:            GenerateConnectMetricLabels(gaugeGroup),
 	},
 	}
 }
@@ -203,6 +203,32 @@ func generateSumMetric(key string, value int64) *flattenMetrics.Metric {
 func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0, 27)
 	labelMap := gaugeGroup.Labels
+	generateK8sLabels(labelMap, metricLabels)
+	protocol := labelMap.GetStringValue(constlabels.Protocol)
+	GenerateStringKeyValueSlice(constant.Protocol, protocol, &metricLabels)
+	protocolKey := constlabels.ContentKey
+	if protocol == constvalues.ProtocolHttp {
+	}
+
+	if protocol == constvalues.ProtocolDns {
+		protocolKey = constlabels.DnsDomain
+	}
+
+	if protocol == constvalues.ProtocolKafka {
+		protocolKey = constlabels.KafkaTopic
+	}
+
+	if protocol == constvalues.ProtocolDubbo {
+	}
+
+	if protocol == constvalues.ProtocolMysql {
+		protocolKey = constlabels.KafkaTopic
+	}
+	GenerateStringKeyValueSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &metricLabels)
+	return metricLabels
+}
+
+func generateK8sLabels(labelMap *model.AttributeMap, metricLabels []v1.StringKeyValue) {
 	GenerateStringKeyValueSlice(constant.Pid, strconv.FormatInt(labelMap.GetIntValue(constlabels.Pid), 10), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNode, labelMap.GetStringValue(constlabels.SrcNode), &metricLabels)
 	GenerateStringKeyValueSlice(constant.SrcNamespace, labelMap.GetStringValue(constlabels.SrcNamespace), &metricLabels)
@@ -243,32 +269,17 @@ func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValu
 		GenerateStringKeyValueSlice(constant.DstPodPort, strconv.FormatInt(labelMap.GetIntValue(constlabels.DstPort), 10), &metricLabels)
 	}
 	GenerateStringKeyValueSlice(constant.DstServicePort, dstServicePort, &metricLabels)
-	protocol := labelMap.GetStringValue(constlabels.Protocol)
-	GenerateStringKeyValueSlice(constant.Protocol, protocol, &metricLabels)
-	protocolKey := constlabels.ContentKey
-	if protocol == constvalues.ProtocolHttp {
-	}
+}
 
-	if protocol == constvalues.ProtocolDns {
-		protocolKey = constlabels.DnsDomain
-	}
-
-	if protocol == constvalues.ProtocolKafka {
-		protocolKey = constlabels.KafkaTopic
-	}
-
-	if protocol == constvalues.ProtocolDubbo {
-	}
-
-	if protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.KafkaTopic
-	}
-	GenerateStringKeyValueSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &metricLabels)
+func GenerateConnectMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
+	metricLabels := make([]v1.StringKeyValue, 0)
+	labelsMap := gaugeGroup.Labels
+	generateK8sLabels(labelsMap, metricLabels)
 	return metricLabels
 }
 
 func GenerateMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
-	metricLabels := make([]v1.StringKeyValue, 0)
+	metricLabels := make([]v1.StringKeyValue, 0, 25)
 	labelsMap := gaugeGroup.Labels.ToStringMap()
 	for k, v := range labelsMap {
 		GenerateStringKeyValueSlice(k, v, &metricLabels)
