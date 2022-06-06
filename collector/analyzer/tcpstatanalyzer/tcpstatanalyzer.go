@@ -20,6 +20,8 @@ type TcpstatAnalyzer struct {
 	consumers []consumer.Consumer
 	telemetry *component.TelemetryTools
 	close     chan bool
+	timestamp uint64
+	container map[string]int
 }
 
 type Config struct {
@@ -31,6 +33,7 @@ func New(cfg interface{}, telemetry *component.TelemetryTools, consumers []consu
 	return &TcpstatAnalyzer{
 		consumers: consumers,
 		telemetry: telemetry,
+		container: make(map[string]int),
 	}
 }
 
@@ -43,9 +46,13 @@ func (a *TcpstatAnalyzer) Start() error {
 			case <-a.close:
 				return
 			case <-ticker.C:
+				a.timestamp = uint64(time.Now().UnixNano())
 				err := a.withAllProcs()
 				if err != nil {
 					a.telemetry.Logger.Error("Error collect tcp stats: ", zap.Error(err))
+				}
+				for k := range a.container {
+					delete(a.container, k)
 				}
 			}
 		}

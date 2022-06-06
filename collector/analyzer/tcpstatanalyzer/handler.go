@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
@@ -43,12 +42,14 @@ type TcpStat struct {
 }
 
 func (a *TcpstatAnalyzer) Handle(pid int) error {
-	var container = make(map[string]int)
 	containerId, err := cgroupToContainerId(procRoot, pid)
-	if containerId == "" || err != nil || container[containerId] > 0 {
+	if containerId == "" || err != nil {
 		return err
 	}
-	container[containerId] = pid
+	if a.container[containerId] > 0 {
+		return nil
+	}
+	a.container[containerId] = pid
 
 	// handle tcp ipv4
 	if err := a.handleTcp4(procRoot, pid, containerId); err != nil {
@@ -67,7 +68,7 @@ func (a *TcpstatAnalyzer) handleTcp4(procRoot string, pid int, containerId strin
 		return fmt.Errorf("failure get tcp4 stats from pid[%d]: %v", pid, err)
 	}
 
-	gaugeGroup := newMetricGroup(containerId, t)
+	gaugeGroup := newMetricGroup(containerId, t, a.timestamp)
 	gaugeGroup.Labels.AddStringValue(constlabels.Mode, "tcp4")
 	var retError error
 	for _, nextConsumer := range a.consumers {
@@ -85,7 +86,7 @@ func (a *TcpstatAnalyzer) handleTcp6(procRoot string, pid int, containerId strin
 		return fmt.Errorf("failure get tcp6 stats from pid[%d]: %v", pid, err)
 	}
 
-	gaugeGroup := newMetricGroup(containerId, t)
+	gaugeGroup := newMetricGroup(containerId, t, a.timestamp)
 	gaugeGroup.Labels.AddStringValue(constlabels.Mode, "tcp6")
 	var retError error
 	for _, nextConsumer := range a.consumers {
@@ -97,7 +98,7 @@ func (a *TcpstatAnalyzer) handleTcp6(procRoot string, pid int, containerId strin
 	return retError
 }
 
-func newMetricGroup(containerId string, t TcpStat) *model.DataGroup {
+func newMetricGroup(containerId string, t TcpStat, timestamp uint64) *model.DataGroup {
 	labels := model.NewAttributeMap()
 	labels.AddStringValue(constlabels.ContainerId, containerId)
 	var values = []*model.Metric{
@@ -113,7 +114,7 @@ func newMetricGroup(containerId string, t TcpStat) *model.DataGroup {
 		{Name: constvalues.TcpstatListen, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.Listen)}}},
 		{Name: constvalues.TcpstatTimeWait, Data: &model.Metric_Int{Int: &model.Int{Value: int64(t.TimeWait)}}},
 	}
-	gaugeGroup := model.NewDataGroup(constnames.TcpStatsMetricGroup, labels, uint64(time.Now().UnixNano()), values...)
+	gaugeGroup := model.NewDataGroup(constnames.TcpStatsMetricGroup, labels, timestamp, values...)
 	return gaugeGroup
 }
 
