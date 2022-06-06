@@ -52,7 +52,7 @@ const (
 
 	Errno           = "errno"
 	Success         = "success"
-	Mode = "mode"
+	Mode            = "mode"
 	RequestContent  = "request_content"
 	ResponseContent = "response_content"
 	StatusCode      = "status_code"
