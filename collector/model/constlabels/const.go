@@ -50,10 +50,9 @@ const (
 	Ip              = "ip"
 	Port            = "port"
 
-	Mode = "mode"
-
 	Errno           = "errno"
 	Success         = "success"
+	Mode = "mode"
 	RequestContent  = "request_content"
 	ResponseContent = "response_content"
 	StatusCode      = "status_code"

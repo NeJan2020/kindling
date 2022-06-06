@@ -201,6 +201,8 @@ func newTcpLabelSelectors() *aggregator.LabelSelectors {
 		aggregator.LabelSelector{Name: constlabels.DstService, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstIp, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstPort, VType: aggregator.IntType},
+		aggregator.LabelSelector{Name: constlabels.DnatIp, VType: aggregator.StringType},
+		aggregator.LabelSelector{Name: constlabels.DnatPort, VType: aggregator.IntType},
 		aggregator.LabelSelector{Name: constlabels.DstContainerId, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstContainer, VType: aggregator.StringType},
 	)
@@ -208,6 +210,7 @@ func newTcpLabelSelectors() *aggregator.LabelSelectors {
 
 func newTcpConnectLabelSelectors() *aggregator.LabelSelectors {
 	return aggregator.NewLabelSelectors(
+		aggregator.LabelSelector{Name: constlabels.Pid, VType: aggregator.IntType},
 		aggregator.LabelSelector{Name: constlabels.SrcNode, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.SrcNodeIp, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.SrcNamespace, VType: aggregator.StringType},
@@ -227,6 +230,8 @@ func newTcpConnectLabelSelectors() *aggregator.LabelSelectors {
 		aggregator.LabelSelector{Name: constlabels.DstService, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstIp, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstPort, VType: aggregator.IntType},
+		aggregator.LabelSelector{Name: constlabels.DnatIp, VType: aggregator.StringType},
+		aggregator.LabelSelector{Name: constlabels.DnatPort, VType: aggregator.IntType},
 		aggregator.LabelSelector{Name: constlabels.DstContainerId, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DstContainer, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.Errno, VType: aggregator.IntType},
