@@ -243,14 +243,14 @@ func InitFlattenExporter(t *testing.T) {
 	}
 	export := NewExporter(config, component.NewDefaultTelemetryTools())
 	for i := 0; i < 1; i++ {
-		go export.Consume(makeSingleDataGroup(i))
+		//go export.Consume(makeSingleDataGroup(i))
 		//time.Sleep(1 * time.Second)
 		//go export.Consume(makePageFaultDataGroup(i))
 	}
 
 	for i := 1; i < 2; i++ {
 		//go export.Consume(makeSingleDataGroup(i))
-		//go export.Consume(makeAggNetDataGroup(i))
+		go export.Consume(makeAggNetDataGroup(i))
 		//go export.Consume(makeTcpStatsDataGroup(i))
 		//go export.Consume(makePageFaultDataGroup(i))
 

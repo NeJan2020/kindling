@@ -104,72 +104,69 @@ func GenerateConnectMetricMap(gaugeGroup *model.DataGroup) map[string]*flattenMe
 }
 
 func generateMetric(key string, gaugeGroup *model.DataGroup, gaugeMap map[string]*model.Metric) *flattenMetrics.Metric {
-	metric, ok := gaugeMap[key]
-	if ok {
-		switch key {
-		case constant.RequestIo, constant.ResponseIo:
+	metric := gaugeMap[key]
+	switch key {
+	case constant.RequestIo, constant.ResponseIo:
+		return generateSumMetric(key, metric.GetInt().Value)
+	case constant.RequestTotalTime:
+		if metric.DataType() == model.HistogramMetricType {
+			return generateHistogramMetric(constant.RequestDurationTime, metric)
+		} else {
 			return generateSumMetric(key, metric.GetInt().Value)
-		case constant.RequestTotalTime:
-			if metric.DataType() == model.HistogramMetricType {
-				return generateHistogramMetric(constant.RequestDurationTime, metric)
-			} else {
-				return generateSumMetric(key, metric.GetInt().Value)
-			}
-		case constant.Slow:
-			isSlow := gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow)
-			if isSlow {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-
-		case constant.Error:
-			isError := gaugeGroup.Labels.GetBoolValue(constlabels.IsError)
-			if isError {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-
-		case constant.StatusCode1xxTotal:
-			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-			if httpCode < 200 {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-		case constant.StatusCode2xxTotal:
-			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-			if httpCode < 300 && httpCode >= 200 {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-		case constant.StatusCode3xxTotal:
-			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-			if httpCode < 400 && httpCode >= 300 {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-		case constant.StatusCode4xxTotal:
-			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-			if httpCode < 500 && httpCode >= 400 {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-		case constant.StatusCode5xxTotal:
-			httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-			if httpCode >= 500 {
-				return generateRequestCountMetric(key, gaugeMap)
-			} else {
-				return generateSumMetric(key, 0)
-			}
-
-		default:
-			break
 		}
+	case constant.Slow:
+		isSlow := gaugeGroup.Labels.GetBoolValue(constlabels.IsSlow)
+		if isSlow {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+	case constant.Error:
+		isError := gaugeGroup.Labels.GetBoolValue(constlabels.IsError)
+		if isError {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+
+	case constant.StatusCode1xxTotal:
+		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+		if httpCode < 200 {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+	case constant.StatusCode2xxTotal:
+		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+		if httpCode < 300 && httpCode >= 200 {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+	case constant.StatusCode3xxTotal:
+		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+		if httpCode < 400 && httpCode >= 300 {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+	case constant.StatusCode4xxTotal:
+		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+		if httpCode < 500 && httpCode >= 400 {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+	case constant.StatusCode5xxTotal:
+		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
+		if httpCode >= 500 {
+			return generateRequestCountMetric(key, gaugeMap)
+		} else {
+			return generateSumMetric(key, 0)
+		}
+
+	default:
+		break
 	}
 	return nil
 }
