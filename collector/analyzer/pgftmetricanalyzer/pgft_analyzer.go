@@ -18,10 +18,6 @@ const (
 	PgftMetric analyzer.Type = "pgftmetricanalyzer"
 )
 
-var consumableEvents = map[string]bool{
-	constnames.SwitchEvent: true,
-}
-
 type PgftMetricAnalyzer struct {
 	consumers []consumer.Consumer
 	telemetry *component.TelemetryTools
@@ -41,11 +37,7 @@ func (a *PgftMetricAnalyzer) Start() error {
 
 // ConsumeEvent gets the event from the previous component
 func (a *PgftMetricAnalyzer) ConsumeEvent(event *model.KindlingEvent) error {
-	_, ok := consumableEvents[event.Name]
-	if !ok {
-		return nil
-	}
-	var gaugeGroup *model.GaugeGroup
+	var gaugeGroup *model.DataGroup
 	var err error
 	switch event.Name {
 	case constnames.SwitchEvent:
@@ -72,7 +64,7 @@ func (a *PgftMetricAnalyzer) ConsumeEvent(event *model.KindlingEvent) error {
 	return retError
 }
 
-func (a *PgftMetricAnalyzer) generateSwitchPgft(event *model.KindlingEvent) (*model.GaugeGroup, error) {
+func (a *PgftMetricAnalyzer) generateSwitchPgft(event *model.KindlingEvent) (*model.DataGroup, error) {
 	labels, err := a.getSwitchLabels(event)
 	if err != nil {
 		return nil, err
@@ -83,16 +75,9 @@ func (a *PgftMetricAnalyzer) generateSwitchPgft(event *model.KindlingEvent) (*mo
 	ptMaj := (int64)(pgftMaj.GetUintValue())
 	ptMin := (int64)(pgftMin.GetUintValue())
 
-	var gaugeSlice []*model.Gauge
-	gaugeMaj := &model.Gauge{
-		Name:  constnames.PgftSwitchMajorMetricName,
-		Value: ptMaj,
-	}
-
-	gaugeMin := &model.Gauge{
-		Name:  constnames.PgftSwitchMinorMetricName,
-		Value: ptMin,
-	}
+	var gaugeSlice []*model.Metric
+	gaugeMaj := model.NewIntMetric(constnames.PgftSwitchMajorMetricName, ptMaj)
+	gaugeMin := model.NewIntMetric(constnames.PgftSwitchMinorMetricName, ptMin)
 	if ptMaj != 0 {
 		gaugeSlice = append(gaugeSlice, gaugeMaj)
 	}
@@ -100,7 +85,7 @@ func (a *PgftMetricAnalyzer) generateSwitchPgft(event *model.KindlingEvent) (*mo
 		gaugeSlice = append(gaugeSlice, gaugeMin)
 	}
 
-	return model.NewGaugeGroup(constnames.PgftGaugeGroupName, labels, event.Timestamp, gaugeSlice...), nil
+	return model.NewDataGroup(constnames.PgftGaugeGroupName, labels, event.Timestamp, gaugeSlice...), nil
 }
 
 func (a *PgftMetricAnalyzer) getSwitchLabels(event *model.KindlingEvent) (*model.AttributeMap, error) {
@@ -138,4 +123,8 @@ func (a *PgftMetricAnalyzer) Shutdown() error {
 // Type returns the type of the analyzer
 func (a *PgftMetricAnalyzer) Type() analyzer.Type {
 	return PgftMetric
+}
+
+func (a *PgftMetricAnalyzer) ConsumableEvents() []string {
+	return []string{constnames.SwitchEvent}
 }
