@@ -159,7 +159,7 @@ func makeTcpStatsDataGroup(i int) *model.DataGroup {
 
 func makePageFaultDataGroup(i int) *model.DataGroup {
 	MetricsGroup := &model.DataGroup{
-		Name: constnames.PageFaultMetricGroupName,
+		Name: constnames.PgftGaugeGroupName,
 		Metrics: []*model.Metric{
 			model.NewIntMetric("kindling_pagefault_major_total", int64(i)),
 			model.NewIntMetric("kindling_pagefault_minor_total", int64(i)),
@@ -250,9 +250,9 @@ func InitFlattenExporter(t *testing.T) {
 
 	for i := 1; i < 2; i++ {
 		//go export.Consume(makeSingleDataGroup(i))
-		go export.Consume(makeAggNetDataGroup(i))
+		//go export.Consume(makeAggNetDataGroup(i))
 		//go export.Consume(makeTcpStatsDataGroup(i))
-		//go export.Consume(makePageFaultDataGroup(i))
+		go export.Consume(makePageFaultDataGroup(i))
 
 		//go export.Consume(makeTcpMetricDataGroup(i))
 	}

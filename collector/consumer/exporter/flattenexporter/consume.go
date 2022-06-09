@@ -47,7 +47,7 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		tcpInuseMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStats)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpInuseMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-	case constnames.PageFaultMetricGroupName:
+	case constnames.PgftGaugeGroupName:
 		pageFaultMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypePageFault)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, pageFaultMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
