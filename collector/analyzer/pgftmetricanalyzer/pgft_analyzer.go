@@ -89,6 +89,9 @@ func (a *PgftMetricAnalyzer) generateSwitchPgft(event *model.KindlingEvent) (*mo
 	if ptMin != 0 {
 		gaugeSlice = append(gaugeSlice, gaugeMin)
 	}
+	if len(gaugeSlice) == 0 {
+		return nil, nil
+	}
 
 	return model.NewDataGroup(constnames.PgftGaugeGroupName, labels, event.Timestamp, gaugeSlice...), nil
 }
