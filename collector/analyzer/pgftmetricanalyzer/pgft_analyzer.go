@@ -54,6 +54,11 @@ func (a *PgftMetricAnalyzer) ConsumeEvent(event *model.KindlingEvent) error {
 	if gaugeGroup == nil {
 		return nil
 	}
+	if ce := a.telemetry.Logger.Check(zapcore.DebugLevel, "gaugeGroup"); ce != nil {
+		ce.Write(
+			zap.String("gaugeGroup---", gaugeGroup.String()),
+		)
+	}
 	var retError error
 	for _, nextConsumer := range a.consumers {
 		err := nextConsumer.Consume(gaugeGroup)
