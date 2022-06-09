@@ -37,6 +37,9 @@ const (
 
 	TcpConnectTotalMetric    = "kindling_tcp_connect_total"
 	TcpConnectDurationMetric = "kindling_tcp_connect_duration_nanoseconds_total"
+
+	PgftSwitchMajorMetricName = "kindling_pagefault_major_total"
+	PgftSwitchMinorMetricName = "kindling_pagefault_minor_total"
 )
 
 const (

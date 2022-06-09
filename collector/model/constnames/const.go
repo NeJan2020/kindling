@@ -11,6 +11,8 @@ const (
 	RecvMsgEvent  = "recvmsg"
 	ConnectEvent  = "connect"
 
+	SwitchEvent = "switch"
+
 	TcpCloseEvent          = "tcp_close"
 	TcpRcvEstablishedEvent = "tcp_rcv_established"
 	TcpDropEvent           = "tcp_drop"
@@ -31,6 +33,5 @@ const (
 	TcpConnectMetricGroupName = "tcp_connect_metric_group"
 	NodeMetricGroupName       = "node_metric_metric_group"
 	TcpStatsMetricGroup       = "tcp_stats_metric_group"
-
-	PageFaultMetricGroupName = "pgft_metric_metric_group"
+	PgftGaugeGroupName = "pgft_metric_metric_group"
 )

@@ -6,6 +6,9 @@ import (
 	"time"
 
 	analyzerpackage "github.com/Kindling-project/kindling/collector/analyzer"
+	"github.com/Kindling-project/kindling/collector/analyzer/network"
+	"github.com/Kindling-project/kindling/collector/analyzer/pgftmetricanalyzer"
+	"github.com/Kindling-project/kindling/collector/analyzer/tcpmetricanalyzer"
 	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/receiver"
