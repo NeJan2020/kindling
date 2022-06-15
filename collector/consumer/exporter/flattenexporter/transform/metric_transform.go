@@ -131,7 +131,7 @@ func generateMetric(key string, gaugeGroup *model.DataGroup, gaugeMap map[string
 
 	case constant.StatusCode1xxTotal:
 		httpCode := gaugeGroup.Labels.GetIntValue(constlabels.HttpStatusCode)
-		if httpCode < 200 {
+		if httpCode < 200 && httpCode >= 100 {
 			return generateRequestCountMetric(key, gaugeMap)
 		} else {
 			return generateSumMetric(key, 0)

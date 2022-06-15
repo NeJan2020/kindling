@@ -20,10 +20,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rs/cors v1.8.2
+	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.1
+	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0
 	go.opentelemetry.io/otel v1.2.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.25.0
