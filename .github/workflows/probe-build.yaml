@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        ref: 'cg_zj'
       - name: build-by-builder-container
         uses: addnab/docker-run-action@v3
         with:
