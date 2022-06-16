@@ -16,4 +16,5 @@ jobs:
           image: kindlingproject/agent-builder:latest
           options: -v ${{ github.workspace }}:/kindling
           run: |
-            cd /kindling && ls -a
+            cd /deploy/scripts && ./build.sh
+            
