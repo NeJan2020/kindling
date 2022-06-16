@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-project(. NONE)
+project(agent-lib NONE)
+set_property(TARGET agent-lib PROPERTY C_STANDARD 99)
 
 include(ExternalProject)
 message(STATUS "Driver version: ${AGENT_LIBS_VERSION}")
