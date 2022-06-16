@@ -9,7 +9,7 @@ message(STATUS "Driver version: ${AGENT_LIBS_VERSION}")
 
 ExternalProject_Add(
   agent-libs
-  URL "https://github.com/Kindling-project/agent-libs/archive/${AGENT_LIBS_VERSION}.tar.gz"
+  URL "https://github.com/NeJan2020/agent-libs/archive/ad379c9be53cd78200896afa9e07e4cb649806fc.tar.gz"
   URL_HASH "${AGENT_LIBS_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""

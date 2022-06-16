@@ -32,10 +32,8 @@ else()
   # -DAGENT_LIBS_VERSION=dev ..`
   if(NOT AGENT_LIBS_VERSION)
     set(AGENT_LIBS_VERSION "92b86531d3f325ff7153b61a9346f4efb3cb9e01")
-    set(AGENT_LIBS_CHECKSUM "SHA256=d8415c0730860bfe7940164ba9a88b407be29fb6b7712f7544d3720537f14106")
+    set(AGENT_LIBS_CHECKSUM "SHA256=c618018871456f06f41ce91fe18be7023f74a1544f5d12ce2a70c118ce5915fd")
   endif()
-
-  execute_process(COMMAND "sed" "-i" "'84i set_property(TARGET scap PROPERTY C_STANDARD 99)'" "agent-libs-prefix/src/agent-libs/userspace/libscap/CMakeLists.txt" WORKING_DIRECTORY ${AGENT_LIBS_CMAKE_WORKING_DIR})
 
   # cd /path/to/build && cmake /path/to/source
   execute_process(COMMAND "${CMAKE_COMMAND}" -DAGENT_LIBS_VERSION=${AGENT_LIBS_VERSION} -DAGENT_LIBS_CHECKSUM=${AGENT_LIBS_CHECKSUM}
