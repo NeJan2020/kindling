@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [ "cg_zj" ]
+  workflow_dispatch:
+  
+jobs:
+  build-binarys:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build-by-builder-container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: kindlingproject/agent-builder:latest
+          options: -v ${{ github.workspace }}:/kindling
+          run: |
+            cd /kindling && ls -a
