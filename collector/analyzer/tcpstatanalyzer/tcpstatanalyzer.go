@@ -77,7 +77,7 @@ func (a *TcpstatAnalyzer) withAllProcs() error {
 		}
 
 		if err = a.Handle(pid); err != nil {
-			a.telemetry.Logger.Error("Error handle tcp stats: ", zap.Int("Pid", pid), zap.Error(err))
+			a.telemetry.Logger.Info("Unable to handle tcp stats: ", zap.Int("Pid", pid), zap.Error(err))
 		}
 	}
 	return nil
