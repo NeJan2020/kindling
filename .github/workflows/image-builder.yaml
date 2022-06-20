@@ -1,4 +1,4 @@
-name: CI
+name: image-builder
 
 on:
   push:
