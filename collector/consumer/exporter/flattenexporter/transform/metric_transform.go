@@ -219,7 +219,6 @@ func generateRequestMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValu
 	}
 
 	if protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.KafkaTopic
 	}
 	GenerateStringKeyValueSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &metricLabels)
 	return metricLabels
