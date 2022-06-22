@@ -88,8 +88,8 @@ func GenerateAttributes(gaugeGroup *model.DataGroup) []v11.KeyValue {
 	}
 
 	if protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.KafkaTopic
-		statusCode = constlabels.KafkaErrorCode
+		protocolKey = constlabels.ContentKey
+		statusCode = constlabels.SqlErrCode
 	}
 
 	if statusCode != "" {
