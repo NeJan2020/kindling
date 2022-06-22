@@ -88,4 +88,12 @@ const (
 	HttpApmTraceId   = "trace_id"
 
 	HttpStatusCode = "http_status_code"
+	DubboErrorCode = "dubbo_error_code"
+
+	KafkaErrorCode = "kafka_error_code"
+	KafkaTopic     = "kafka_topic"
+
+	MysqlSql       = "mysql_sql"
+	MysqlErrorCode = "mysql_error_code"
+	MysqlErrorMsg  = "mysql_error_message"
 )

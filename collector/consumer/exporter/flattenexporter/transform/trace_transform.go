@@ -3,6 +3,7 @@ package transform
 import (
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/constant"
 	flattenTraces "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
+	v1 "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/common/v1"
 	v11 "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/common/v1"
 	trace "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/trace/v1"
 	"github.com/Kindling-project/kindling/collector/model"
@@ -60,42 +61,18 @@ func GenerateAttributes(gaugeGroup *model.DataGroup) []v11.KeyValue {
 	//GenerateKeyValueBoolSlice(constant.IsConnectFail, labelMap.GetBoolValue(constlabels.IsConnectFail), &keyValueSlice)
 	protocol := labelMap.GetStringValue(constlabels.Protocol)
 	GenerateKeyValueStringSlice(constant.APPProtocol, protocol, &keyValueSlice)
+	GenerateProtocolMap(protocol, labelMap, &keyValueSlice)
 
-	protocolKey := constlabels.ContentKey
-	var statusCode string
-	if protocol == constvalues.ProtocolHttp {
-		statusCode = constlabels.HttpStatusCode
-		GenerateTraceApp(constant.RequestAPP, labelMap, &keyValueSlice)
-		GenerateTraceApp(constant.ResponseAPP, labelMap, &keyValueSlice)
+	switch protocol {
+	case constvalues.ProtocolDns:
+		GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(constlabels.DnsDomain), &keyValueSlice)
+	case constvalues.ProtocolKafka:
+		GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(constlabels.KafkaTopic), &keyValueSlice)
+	default:
+		GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(constlabels.ContentKey), &keyValueSlice)
 	}
 
-	if protocol == constvalues.ProtocolDns {
-		statusCode = constlabels.DnsRcode
-		protocolKey = constlabels.DnsDomain
-		//GenerateKeyValueIntSlice(constant.DnsQueryTime, labelMap.GetIntValue(constlabels.DnsQueryTime), &keyValueSlice)
-		dnsRcode := labelMap.GetIntValue(constlabels.DnsRcode)
-		GenerateKeyValueIntSlice(constant.DNS_R_CODE, dnsRcode, &keyValueSlice)
-		GenerateKeyValueStringSlice(constant.DNS_DOMAIN, labelMap.GetStringValue(constlabels.DnsDomain), &keyValueSlice)
-	}
-
-	if protocol == constvalues.ProtocolKafka {
-		statusCode = constlabels.KafkaErrorCode
-		protocolKey = constlabels.KafkaTopic
-	}
-
-	if protocol == constvalues.ProtocolDubbo {
-		statusCode = constlabels.DubboErrorCode
-	}
-
-	if protocol == constvalues.ProtocolMysql {
-		protocolKey = constlabels.ContentKey
-		statusCode = constlabels.SqlErrCode
-	}
-
-	if statusCode != "" {
-		GenerateKeyValueIntSlice(constant.Status, labelMap.GetIntValue(statusCode), &keyValueSlice)
-	}
-	GenerateKeyValueStringSlice(constant.ContentKey, labelMap.GetStringValue(protocolKey), &keyValueSlice)
+	GenerateKeyValueIntSlice(constant.Status, labelMap.GetIntValue(constlabels.ErrorType), &keyValueSlice)
 	GenerateKeyValueIntSlice(constant.Timestamp, int64(gaugeGroup.Timestamp), &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.SrcIp, labelMap.GetStringValue(constlabels.SrcIp), &keyValueSlice)
 	GenerateKeyValueIntSlice(constant.SrcPort, labelMap.GetIntValue(constlabels.SrcPort), &keyValueSlice)
@@ -144,8 +121,29 @@ func GenerateAttributes(gaugeGroup *model.DataGroup) []v11.KeyValue {
 	GenerateKeyValueStringSlice(constant.ContainerId, containerId, &keyValueSlice)
 	GenerateKeyValueStringSlice(constant.ContainerName, containerName, &keyValueSlice)
 	//GenerateKeyValueIntSlice(constant.HTTPS_TLS, labelMap.GetIntValue(constlabels.HTTPS_TLS), &keyValueSlice)
-	GenerateKeyValueStringSlice(constant.RequestPayload, labelMap.GetStringValue(constlabels.HttpRequestPayload), &keyValueSlice)
-	GenerateKeyValueStringSlice(constant.ResponsePayload, labelMap.GetStringValue(constlabels.HttpResponsePayload), &keyValueSlice)
+	// PUT Payload into requestApp
+	// GenerateKeyValueStringSlice(constant.RequestPayload, labelMap.GetStringValue(constlabels.HttpRequestPayload), &keyValueSlice)
+	// GenerateKeyValueStringSlice(constant.ResponsePayload, labelMap.GetStringValue(constlabels.HttpResponsePayload), &keyValueSlice)
 	//GenerateArrayValueSlice(constant.MESSAGE_CAPTURE, labelMap.GetStringValue(constlabels.HttpResponsePayload), &keyValueSlice)
 	return keyValueSlice
+}
+
+func GenerateProtocolMap(protocol string, labelMap *model.AttributeMap, keyValueSlice *[]v1.KeyValue) {
+	switch protocol {
+	case constvalues.ProtocolHttp:
+		GenerateHttpRequestTraceApp(constant.RequestAPP, labelMap, keyValueSlice)
+		GenerateHttpResponseTraceApp(constant.ResponseAPP, labelMap, keyValueSlice)
+	case constvalues.ProtocolDubbo:
+		GenerateDubboRequestTraceApp(constant.RequestAPP, labelMap, keyValueSlice)
+		GenerateDubboResponseTraceApp(constant.ResponseAPP, labelMap, keyValueSlice)
+	case constvalues.ProtocolDns:
+		GenerateDNSRequestTraceApp(constant.RequestAPP, labelMap, keyValueSlice)
+		GenerateDNSResponseTraceApp(constant.ResponseAPP, labelMap, keyValueSlice)
+	case constvalues.ProtocolMysql:
+		GenerateMysqlRequestTraceApp(constant.RequestAPP, labelMap, keyValueSlice)
+		GenerateMysqlResponseTraceApp(constant.ResponseAPP, labelMap, keyValueSlice)
+	case constvalues.ProtocolKafka:
+		GenerateKafkaRequestTraceApp(constant.RequestAPP, labelMap, keyValueSlice)
+		GenerateKafkaResponseTraceApp(constant.ResponseAPP, labelMap, keyValueSlice)
+	}
 }
