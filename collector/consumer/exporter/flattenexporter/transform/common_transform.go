@@ -160,7 +160,7 @@ func GenerateMysqlResponseTraceApp(key string, labelsMap *model.AttributeMap, ke
 
 	//Mysql ErrorMsg
 	errMsg := labelsMap.GetStringValue(constlabels.SqlErrMsg)
-	msg := v1.KeyValue{Key: constant.MysqlErrorMsg, Value: v1.AnyValue{Value: &v1.AnyValue_IntValue{IntValue: errMsg}}}
+	msg := v1.KeyValue{Key: constant.MysqlErrorMsg, Value: v1.AnyValue{Value: &v1.AnyValue_StringValue{StringValue: errMsg}}}
 	keySlice = append(keySlice, msg)
 	GenerateKvlistValueSlice(key, keySlice, keyValueSlice)
 }
