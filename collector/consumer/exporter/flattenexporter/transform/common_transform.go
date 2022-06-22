@@ -134,7 +134,7 @@ func GenerateKafkaResponseTraceApp(key string, labelsMap *model.AttributeMap, ke
 
 	//kafka ErrorCode
 	errCode := labelsMap.GetIntValue(constlabels.KafkaErrorCode)
-	code := v1.KeyValue{Key: constant.DNS_R_CODE, Value: v1.AnyValue{Value: &v1.AnyValue_IntValue{IntValue: errCode}}}
+	code := v1.KeyValue{Key: constant.KafkaErrorCode, Value: v1.AnyValue{Value: &v1.AnyValue_IntValue{IntValue: errCode}}}
 	keySlice = append(keySlice, code)
 
 	GenerateKvlistValueSlice(key, keySlice, keyValueSlice)
