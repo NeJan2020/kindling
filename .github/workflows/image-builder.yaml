@@ -1,17 +1,17 @@
-name: image-builder
+name: pr-pre-build
 
 on:
-  push:
+  pull_request_review:
+    types: [submitted]
     branches: [ "cg_zj" ]
   workflow_dispatch:
   
 jobs:
   build-images:
+    if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: 'cg_zj'
       - name: build-by-builder-container
         uses: addnab/docker-run-action@v3
         with:
@@ -19,17 +19,15 @@ jobs:
           options: -v ${{ github.workspace }}:/kindling
           run: |
             cd /kindling/deploy/scripts && ./build-binarys.sh
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.REGISTERY_USERNAME }}
           password: ${{ secrets.REGISTERY_PWD }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: ${{ github.workspace }}/collector/docker
           push: true
-          tags: practicedemo/kindling-collector-test:cg_zj
+          tags: practicedemo/kindling-collector-ci:test
             
