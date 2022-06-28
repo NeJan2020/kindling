@@ -32,7 +32,7 @@ jobs:
           push: true
           tags: practicedemo/kindling-agent-ci:${{ env.RELEASE }}
       - name: Prepare Deploy
-        runs:
+        run: |
           sed -i 's#kindlingproject/kindling-agent:latest#practicedemo/kindling-agent-ci:${{ env.RELEASE }}' deploy/agent/kindling-deploy.yml
           tar -czvf kindling-agent-${{ env.RELEASE }}-install.tar.gz deploy
       - uses: ncipollo/release-action@v1
