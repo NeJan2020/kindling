@@ -9,5 +9,5 @@ collector: libkindling
 .PHONY: libkindling
 libkindling:
 	mkdir -p probe/build && cd probe/build && cmake -DBUILD_DRIVER=OFF -DPROBE_VERSION=0.1.1dev .. && make
-	cp -rf ./src/libkindling.so ../../collector/docker/libso
-	cp -rf ./src/libkindling.so /usr/lib64/
+	cp -rf libkindling.so ../../collector/docker/libso
+	cp -rf libkindling.so /usr/lib64/
