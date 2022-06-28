@@ -1,14 +1,17 @@
 name: KINDLING-PUBLISH
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+    - 'release-*'
 
 jobs:
-  build-agent:
+  publish:
     runs-on: ubuntu-latest
-    env:
-      RELEASE: ${{ github.event.release.name }}
+    permissions:
+      contents: write
+    env: 
+      RELEASE: ${{ github.ref }}
     steps:
       - uses: actions/checkout@v3
       - name: build-by-builder-container
@@ -28,3 +31,11 @@ jobs:
           context: ${{ github.workspace }}/collector/docker
           push: true
           tags: practicedemo/kindling-agent-ci:${{ env.RELEASE }}
+      - name: Prepare Deploy
+        runs:
+          sed -i 's#kindlingproject/kindling-agent:latest#practicedemo/kindling-agent-ci:${{ env.RELEASE }}' deploy/agent/kindling-deploy.yml
+          tar -czvf kindling-agent-${{ env.RELEASE }}-install.tar.gz deploy
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "kindling-agent-${{ env.RELEASE }}-install.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
