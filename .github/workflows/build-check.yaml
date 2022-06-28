@@ -2,9 +2,9 @@ name: KINDLING-FUNCTION-TEST
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main-github-action-test]
   push:
-    branches: [main, release-*]
+    branches: [main-github-action-test, release-*]
 
 jobs:
   build-check:
