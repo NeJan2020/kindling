@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env: 
-      RELEASE: ${{ github.ref }}
     steps:
+      - name: Set RELEASE
+        run: echo "RELEASE=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
       - name: build-by-builder-container
         uses: addnab/docker-run-action@v3
@@ -33,7 +33,7 @@ jobs:
           tags: practicedemo/kindling-agent-ci:${{ env.RELEASE }}
       - name: Prepare Deploy
         run: |
-          sed -i 's#kindlingproject/kindling-agent:latest#practicedemo/kindling-agent-ci:${{ env.RELEASE }}' deploy/agent/kindling-deploy.yml
+          sed -i 's#kindlingproject/kindling-agent:latest#practicedemo/kindling-agent-ci:${{ env.RELEASE }}#g' deploy/agent/kindling-deploy.yml
           tar -czvf kindling-agent-${{ env.RELEASE }}-install.tar.gz deploy
       - uses: ncipollo/release-action@v1
         with:
