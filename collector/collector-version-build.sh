@@ -3,3 +3,4 @@ echo "Git commit:" $GitCommit
 go build -o docker/kindling-collector -ldflags="-X 'github.com/Kindling-project/kindling/collector/version.CodeVersion=$GitCommit'"
 
 # Add feat test
+# Fix test
