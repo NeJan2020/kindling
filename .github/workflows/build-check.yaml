@@ -1,0 +1,19 @@
+name: KINDLING-FUNCTION-TEST
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, release-*]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build-binary-test
+        uses: addnab/docker-run-action@v3
+        with:
+          image: kindlingproject/agent-builder:latest
+          options: -v ${{ github.workspace }}:/kindling -w /kindling
+          run: make
