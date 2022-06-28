@@ -1,0 +1,27 @@
+name: KINDLING-PR-TEST
+
+on: issue_comment
+
+jobs:
+  build-test-image:
+    if: ${{ github.event.issue.pull_request }} && ${{ github.event.issue.commit.body }} == "/test-pr"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build-binary-test
+        uses: addnab/docker-run-action@v3
+        with:
+          image: kindlingproject/agent-builder:latest
+          options: -v ${{ github.workspace }}:/kindling -w /kindling
+          run: make
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.REGISTERY_USERNAME }}
+          password: ${{ secrets.REGISTERY_PWD }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/collector/docker
+          push: false
+          tags: kindlingproject/kindling-agent:${{ env.RELEASE }}
