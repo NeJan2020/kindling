@@ -36,10 +36,15 @@ jobs:
           sed -i 's#kindlingproject/kindling-agent:latest#kindlingproject/kindling-agent:${{ env.RELEASE }}#g' deploy/agent/kindling-deploy.yml
           mv deploy kindling-agent-${{ env.RELEASE }}-install
           tar -czvf kindling-agent-${{ env.RELEASE }}-install.tar.gz  kindling-agent-${{ env.RELEASE }}-install
+      - name: "Build Changelog"
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@{latest-release}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "kindling-agent-${{ env.RELEASE }}-install.tar.gz"
-          bodyFile: "CHANGELOG.md"
+          body: ${{steps.build_changelog.outputs.changelog}}
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
