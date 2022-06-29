@@ -29,5 +29,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ${{ github.workspace }}/collector/docker
-          push: false
-          tags: kindlingproject/kindling-agent-ci:${{ env.TAG }}
+          push: true
+          tags: practicedemo/kindling-agent-ci:${{ env.TAG }}
