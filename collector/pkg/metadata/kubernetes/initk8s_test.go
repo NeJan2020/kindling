@@ -8,7 +8,7 @@ import (
 )
 
 func TestWatch(t *testing.T) {
-	clientSet, err := initClientSet("kubeConfig", "/Users/mr.wang/Desktop/config")
+	clientSet, err := initClientSet("kubeConfig", "/root/.kube/config")
 	if err != nil {
 		t.Fatalf("cannot init clientSet, %s", err)
 	}

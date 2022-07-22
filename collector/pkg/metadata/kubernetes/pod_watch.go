@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"os"
 	_ "path/filepath"
 	"strings"
 	"sync"
@@ -18,6 +19,10 @@ import (
 	_ "k8s.io/client-go/util/homedir"
 )
 
+func init() {
+	hostIp = getHostIpFromEnv()
+}
+
 type podMap struct {
 	// namespace:
 	//   podName: podInfo{}
@@ -26,6 +31,7 @@ type podMap struct {
 }
 
 var globalPodInfo = newPodMap()
+var hostIp string
 
 func newPodMap() *podMap {
 	return &podMap{
@@ -157,6 +163,8 @@ func onAdd(obj interface{}) {
 	}
 
 	// Add containerId map
+	var portMap PortMap
+	var err error
 	for _, containerStatus := range pod.Status.ContainerStatuses {
 		shortenContainerId := TruncateContainerId(containerStatus.ContainerID)
 		if shortenContainerId == "" {
@@ -169,6 +177,20 @@ func onAdd(obj interface{}) {
 			RefPodInfo:  cachePodInfo,
 		}
 		MetaDataCache.AddByContainerId(shortenContainerId, containerInfo)
+		if dsfEnable && portMap == nil && pod.Status.HostIP == hostIp && runtimeService != nil {
+			portMap, err = runtimeService.GetPortMappingByContainerId(TruncateComplateContainerId(containerStatus.ContainerID))
+			if err != nil {
+				fmt.Printf("Failed to get portMap for container: %v,err is : %v\n", TruncateContainerId(containerStatus.ContainerID), err)
+			}
+		}
+		if len(portMap) > 0 {
+			for _, containerSpec := range pod.Spec.Containers {
+				if containerSpec.Name == containerStatus.Name {
+					MetaDataCache.AddDSFRuleByContainerPorts(containerSpec.Ports, portMap, containerInfo)
+					break
+				}
+			}
+		}
 	}
 
 	// Add pod IP and port map
@@ -201,7 +223,6 @@ func onAdd(obj interface{}) {
 					cachePodInfo.HostPorts = append(cachePodInfo.HostPorts, port.HostPort)
 					MetaDataCache.AddContainerByHostIpPort(pod.Status.HostIP, uint32(port.HostPort), containerInfo)
 				}
-				MetaDataCache.AddContainerByIpPort(pod.Status.PodIP, uint32(port.ContainerPort), containerInfo)
 			}
 		}
 	}
@@ -276,6 +297,9 @@ func OnUpdate(objOld interface{}, objNew interface{}) {
 	containerIdCompare := compare.NewStringSlice(oldCachePod.ContainerIds, newContainerIds)
 	containerIdCompare.Compare()
 	deletedPodInfo.containerIds = containerIdCompare.GetRemovedElements()
+	for _, deletedContainerIds := range deletedPodInfo.containerIds {
+		MetaDataCache.DeleteLocalDSFRuleByContainerId(deletedContainerIds)
+	}
 
 	// Check the ports specified.
 	newPorts := make([]int32, 0)
@@ -338,6 +362,9 @@ func onDelete(obj interface{}) {
 		}
 		podInfo.containerIds = append(podInfo.containerIds, shortenContainerId)
 	}
+	for _, deletedContainerIds := range podInfo.containerIds {
+		MetaDataCache.DeleteLocalDSFRuleByContainerId(deletedContainerIds)
+	}
 
 	for _, container := range pod.Spec.Containers {
 		if len(container.Ports) == 0 {
@@ -377,4 +404,22 @@ func TruncateContainerId(containerId string) string {
 		l = 12
 	}
 	return secondString[0:l]
+}
+
+func TruncateComplateContainerId(containerId string) string {
+	sep := "://"
+	separated := strings.SplitN(containerId, sep, 2)
+	if len(separated) < 2 {
+		return ""
+	}
+	return separated[1]
+}
+
+func getHostIpFromEnv() string {
+	value, ok := os.LookupEnv("MY_NODE_IP")
+	if !ok {
+		// return "unknow"
+		return "unknow"
+	}
+	return value
 }

@@ -10,6 +10,18 @@ type config struct {
 	// The unit is seconds, and the default value is 60 seconds.
 	// Should not be lower than 30 seconds.
 	GraceDeletePeriod time.Duration
+
+	// DSFRule
+	DSFConfig *DSFConfig `mapstructure:"dsf_config"`
+}
+
+type DSFConfig struct {
+	Enable           bool          `mapstructure:"enable"`
+	ConfigServerAddr string        `mapstructure:"config_server_addr"`
+	InitEndpoint     string        `mapstructure:"init_endpoint"`
+	UpdateEndpoint   string        `mapstructure:"update_endpoint"`
+	SyncInterval     time.Duration `mapstructure:"sync_interval"`
+	EnableDebug      bool          `mapstructure:"debug"`
 }
 
 type Option func(cfg *config)
@@ -34,5 +46,11 @@ func WithKubeConfigDir(dir string) Option {
 func WithGraceDeletePeriod(interval int) Option {
 	return func(cfg *config) {
 		cfg.GraceDeletePeriod = time.Duration(interval) * time.Second
+	}
+}
+
+func WithDSFConfig(dsfCfg *DSFConfig) Option {
+	return func(cfg *config) {
+		cfg.DSFConfig = dsfCfg
 	}
 }

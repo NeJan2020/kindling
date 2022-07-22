@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 type K8sContainerInfo struct {
@@ -74,6 +76,7 @@ type K8sMetaDataCache struct {
 	ipServiceInfo map[string]map[uint32]*K8sServiceInfo
 
 	hostPortInfo *HostPortMap
+	dsfRuleInfo  *DSFRuleMap
 }
 
 func New() *K8sMetaDataCache {
@@ -82,6 +85,7 @@ func New() *K8sMetaDataCache {
 		ipContainerInfo: make(map[string]map[uint32]*K8sContainerInfo),
 		ipServiceInfo:   make(map[string]map[uint32]*K8sServiceInfo),
 		hostPortInfo:    newHostPortMap(),
+		dsfRuleInfo:     newDSFRuleMap(),
 	}
 
 	return c
@@ -168,6 +172,17 @@ func (c *K8sMetaDataCache) GetContainerByIpPort(ip string, port uint32) (*K8sCon
 func (c *K8sMetaDataCache) GetPodByIpPort(ip string, port uint32) (*K8sPodInfo, bool) {
 	containerInfo, ok := c.GetContainerByIpPort(ip, port)
 	if !ok {
+		if !dsfEnable {
+			return nil, false
+		}
+		if netInfo, ok := c.dsfRuleInfo.SearchByPublicPortAndNodeIp(Port(port), NodeIp(ip)); ok {
+			if netInfo.containerRef != nil {
+				return netInfo.containerRef.RefPodInfo, true
+			} else if containerRef, ok := c.GetByContainerId(netInfo.ContainerId); ok {
+				netInfo.containerRef = containerRef
+				return containerRef.RefPodInfo, true
+			}
+		}
 		return nil, false
 	}
 	return containerInfo.RefPodInfo, true
@@ -206,6 +221,30 @@ func (c *K8sMetaDataCache) DeleteContainerByIpPort(ip string, port uint32) {
 
 func (c *K8sMetaDataCache) AddContainerByHostIpPort(hostIp string, hostPort uint32, containerInfo *K8sContainerInfo) {
 	c.hostPortInfo.add(hostIp, hostPort, containerInfo)
+}
+
+func (c *K8sMetaDataCache) AddDSFRuleByContainerPorts(ports []corev1.ContainerPort, portMap PortMap, containerRef *K8sContainerInfo) error {
+	for _, portInfo := range ports {
+		publicPorts := portMap[Port(portInfo.ContainerPort)]
+		for _, publicPort := range publicPorts {
+			c.dsfRuleInfo.createAndAddRule(publicPort, containerRef, portInfo)
+		}
+	}
+	return nil
+}
+
+func (c *K8sMetaDataCache) DeleteLocalDSFRuleByContainerId(containerId string) {
+	if ports, find := c.dsfRuleInfo.SearchLocalPublicPortByContainerId(containerId); find {
+		c.dsfRuleInfo.deleteAndAddRule(ports...)
+	}
+}
+
+func (c *K8sMetaDataCache) SearchContainerInfoByPublicPortAndNodeIp(publicPort Port, nodeIp NodeIp) (*ContainerNetInfo, bool) {
+	return c.dsfRuleInfo.SearchByPublicPortAndNodeIp(publicPort, nodeIp)
+}
+
+func (c *K8sMetaDataCache) SearchLocalPublicPortByPodIpAndPrivatePort(privatePort Port, podIp string) (Port, bool) {
+	return c.dsfRuleInfo.SearchLocalPublicPortByPodIpAndPrivatePort(privatePort, podIp)
 }
 
 func (c *K8sMetaDataCache) GetContainerByHostIpPort(hostIp string, hostPort uint32) (*K8sContainerInfo, bool) {

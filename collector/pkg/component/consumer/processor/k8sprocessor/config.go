@@ -1,6 +1,8 @@
 package k8sprocessor
 
 import (
+	"time"
+
 	"github.com/Kindling-project/kindling/collector/pkg/metadata/kubernetes"
 )
 
@@ -14,6 +16,9 @@ type Config struct {
 	// Set "Enable" false if you want to run the agent in the non-Kubernetes environment.
 	// Otherwise, the agent will panic if it can't connect to the API-server.
 	Enable bool `mapstructure:"enable"`
+
+	// DSFRule
+	DSFConfig *kubernetes.DSFConfig `mapstructure:"dsf_config"`
 }
 
 var DefaultConfig Config = Config{
@@ -21,4 +26,11 @@ var DefaultConfig Config = Config{
 	KubeConfigDir:     "~/.kube/config",
 	GraceDeletePeriod: 60,
 	Enable:            true,
+	DSFConfig: &kubernetes.DSFConfig{
+		Enable:         false,
+		InitEndpoint:   "/hcmine/config/dsfInit",
+		UpdateEndpoint: "/hcmine/config/dsfUpdate",
+		SyncInterval:   5 * time.Second,
+		EnableDebug:    false,
+	},
 }

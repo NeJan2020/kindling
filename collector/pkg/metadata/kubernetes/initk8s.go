@@ -30,6 +30,13 @@ const (
 	DefaultGraceDeletePeriod time.Duration = time.Second * 60
 )
 
+var DefaultDSFConfig *DSFConfig = &DSFConfig{
+	Enable:         false,
+	InitEndpoint:   "/hcmine/config/dsfInit",
+	UpdateEndpoint: "/hcmine/config/dsfUpdate",
+	SyncInterval:   5 * time.Second,
+}
+
 var authTypes = map[AuthType]bool{
 	AuthTypeNone:           true,
 	AuthTypeServiceAccount: true,
@@ -59,6 +66,8 @@ var (
 	MetaDataCache = New()
 	KubeClient    *k8s.Clientset
 	once          sync.Once
+
+	dsfEnable bool = false
 )
 
 func InitK8sHandler(options ...Option) error {
@@ -68,9 +77,20 @@ func InitK8sHandler(options ...Option) error {
 			KubeAuthType:      AuthTypeKubeConfig,
 			KubeConfigDir:     DefaultKubeConfigPath,
 			GraceDeletePeriod: DefaultGraceDeletePeriod,
+			DSFConfig:         DefaultDSFConfig,
 		}
 		for _, option := range options {
 			option(&k8sConfig)
+		}
+
+		if k8sConfig.DSFConfig.Enable {
+			dsfEnable = true
+			dsfConfig := k8sConfig.DSFConfig
+			configServerClient := NewConfigServerClient(
+				InitDSFEndpoint(dsfConfig.ConfigServerAddr, dsfConfig.InitEndpoint),
+				UpdateDSFEndpoint(dsfConfig.ConfigServerAddr, dsfConfig.UpdateEndpoint))
+			MetaDataCache.dsfRuleInfo.enableDebug = k8sConfig.DSFConfig.EnableDebug
+			go MetaDataCache.dsfRuleInfo.ContinueSyncDSFRuleMapWithConfigServer(configServerClient.InitDSF, configServerClient.UpdateDSF, k8sConfig.DSFConfig.SyncInterval)
 		}
 
 		clientSet, err := initClientSet(string(k8sConfig.KubeAuthType), k8sConfig.KubeConfigDir)
