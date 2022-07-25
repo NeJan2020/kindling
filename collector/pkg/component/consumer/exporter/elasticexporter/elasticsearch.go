@@ -21,6 +21,8 @@ type ElasticExporter struct {
 	client    *es7.Client
 	cfg       *Config
 	telemetry *component.TelemetryTools
+
+	filters []Filter
 }
 
 func FormatJson(data string) string {
@@ -39,6 +41,13 @@ func New(config interface{}, telemetry *component.TelemetryTools) exporter.Expor
 		telemetry.Logger.Error("elatsicSearch Exporter Config Paresed failed!")
 		return nil
 	}
+	filters := make([]Filter, 0)
+	for _, rule := range cfg.SrcFilters {
+		filters = append(filters, NewFilter(rule, true))
+	}
+	for _, rule := range cfg.DstFilters {
+		filters = append(filters, NewFilter(rule, false))
+	}
 	client, err := es7.NewClient(*cfg.ESConfig)
 	if err != nil {
 		telemetry.Logger.Error("unexpected es-config!", zap.Error(err))
@@ -48,6 +57,7 @@ func New(config interface{}, telemetry *component.TelemetryTools) exporter.Expor
 		cfg:       cfg,
 		telemetry: telemetry,
 		client:    client,
+		filters:   filters,
 	}
 }
 

@@ -1,5 +1,10 @@
 package model
 
+import (
+	"bytes"
+	"encoding/json"
+)
+
 const (
 	IntMetricType MetricType = iota
 	HistogramMetricType
@@ -21,6 +26,29 @@ func (i *Metric) GetData() isMetricData {
 		return i.Data
 	}
 	return nil
+}
+
+const MetricPrefix = "{\""
+const MetricKey = "\":"
+const MetricSuffix = "}"
+
+func (i Metric) MarshalJSON() ([]byte, error) {
+	if b, err := json.Marshal(i.Data); err != nil {
+		return nil, err
+	} else {
+		var res bytes.Buffer
+		res.WriteString(MetricPrefix)
+		res.WriteString(i.Name)
+		res.WriteString(MetricKey)
+		res.Write(b)
+		res.WriteString(MetricSuffix)
+		return res.Bytes(), nil
+	}
+}
+
+// TODO UnmarshalJSON
+func (i *Metric) UnmarshalJSON(data []byte) error {
+	panic("Need to implement!")
 }
 
 func (i *Metric) GetInt() *Int {
@@ -69,6 +97,15 @@ func NewIntMetric(name string, value int64) *Metric {
 	return &Metric{Name: name, Data: &Metric_Int{Int: &Int{Value: value}}}
 }
 
+func (i Int) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.Value)
+}
+
+// TODO UnmarshalJSON
+func (i Int) UnmarshalJSON(data []byte) error {
+	panic("Need to implement!")
+}
+
 func NewMetric(name string, data isMetricData) *Metric {
 	return &Metric{Name: name, Data: data}
 }
@@ -95,6 +132,24 @@ type Metric_Int struct {
 	Int *Int
 }
 
+func (i Metric_Int) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.Int)
+}
+
+// TODO UnmarshalJSON
+func (i Metric_Int) UnmarshalJSON(data []byte) error {
+	panic("Need to implement!")
+}
+
 type Metric_Histogram struct {
 	Histogram *Histogram
+}
+
+func (h Metric_Histogram) MarshalJSON() ([]byte, error) {
+	return json.Marshal(h.Histogram)
+}
+
+// TODO UnmarshalJSON
+func (h Metric_Histogram) UnmarshalJSON(data []byte) error {
+	panic("Need to implement!")
 }
