@@ -115,7 +115,6 @@ func (a *PgftMetricAnalyzer) getPageFaultLabels(event *model.KindlingEvent) (*mo
 	}
 
 	containerId := threadinfo.GetContainerId()
-	//containerName := threadinfo.GetContainerName()
 
 	tid := (int64)(threadinfo.GetTid())
 	pid := (int64)(threadinfo.GetPid())
@@ -130,7 +129,6 @@ func (a *PgftMetricAnalyzer) getPageFaultLabels(event *model.KindlingEvent) (*mo
 	labels.AddIntValue(constlabels.Tid, tid)
 	labels.AddIntValue(constlabels.Pid, pid)
 	labels.AddStringValue(constlabels.ContainerId, containerId)
-	//labels.AddStringValue(constlabels.Container, containerName)
 
 	return labels, nil
 }

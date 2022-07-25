@@ -117,6 +117,7 @@ func (p *K8sMetadataProcessor) addK8sMetaDataForPgftLabel(labelMap *model.Attrib
 	labelMap.UpdateAddStringValue(constlabels.Namespace, podInfo.Namespace)
 	labelMap.UpdateAddStringValue(constlabels.WorkloadKind, podInfo.WorkloadKind)
 	labelMap.UpdateAddStringValue(constlabels.WorkloadName, podInfo.WorkloadName)
+	labelMap.UpdateAddStringValue(constlabels.Node, p.localNodeName)
 }
 
 func (p *K8sMetadataProcessor) processNetRequestMetric(dataGroup *model.DataGroup) {
