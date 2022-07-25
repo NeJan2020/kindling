@@ -11,6 +11,7 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/tcpconnectanalyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/tcpmetricanalyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer"
+	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/elasticexporter"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/logexporter"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/otelexporter"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/processor/aggregateprocessor"
@@ -82,6 +83,7 @@ func (a *Application) registerFactory() {
 	a.componentsFactory.RegisterAnalyzer(loganalyzer.Type.String(), loganalyzer.New, &loganalyzer.Config{})
 	a.componentsFactory.RegisterProcessor(aggregateprocessor.Type, aggregateprocessor.New, aggregateprocessor.NewDefaultConfig())
 	a.componentsFactory.RegisterAnalyzer(tcpconnectanalyzer.Type.String(), tcpconnectanalyzer.New, tcpconnectanalyzer.NewDefaultConfig())
+	a.componentsFactory.RegisterExporter(elasticexporter.Type, elasticexporter.New, elasticexporter.DefaultConfig())
 }
 
 func (a *Application) readInConfig(path string) error {
@@ -102,12 +104,14 @@ func (a *Application) readInConfig(path string) error {
 func (a *Application) buildPipeline() error {
 	// TODO: Build pipeline via configuration to implement dependency injection
 	// Initialize exporters
-	otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
-	otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
+	// otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
+	// otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
+	esExporterFactory := a.componentsFactory.Exporters[elasticexporter.Type]
+	esExporter := esExporterFactory.NewFunc(esExporterFactory.Config, a.telemetry.Telemetry)
 	// Initialize all processors
 	// 1. DataGroup Aggregator
 	aggregateProcessorFactory := a.componentsFactory.Processors[aggregateprocessor.Type]
-	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, otelExporter)
+	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, esExporter)
 	// 2. Kubernetes metadata processor
 	k8sProcessorFactory := a.componentsFactory.Processors[k8sprocessor.K8sMetadata]
 	k8sMetadataProcessor := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessor)
@@ -118,7 +122,7 @@ func (a *Application) buildPipeline() error {
 	// use its configuration to initialize the conntracker module which is also used by others.
 	networkAnalyzer := networkAnalyzerFactory.NewFunc(networkAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 	// 2. Layer 4 TCP events analyzer
-	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, otelExporter)
+	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, esExporter)
 	k8sMetadataProcessor2 := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessorForTcp)
 	tcpAnalyzerFactory := a.componentsFactory.Analyzers[tcpmetricanalyzer.TcpMetric.String()]
 	tcpAnalyzer := tcpAnalyzerFactory.NewFunc(tcpAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor2})

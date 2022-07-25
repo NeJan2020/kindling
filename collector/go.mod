@@ -4,6 +4,8 @@ go 1.16
 
 require (
 	github.com/DataDog/ebpf v0.0.0-20220301203322-3fc9ab3b8daf
+	github.com/elastic/go-elasticsearch v0.0.0
+	github.com/elastic/go-elasticsearch/v7 v7.17.1
 	github.com/florianl/go-conntrack v0.3.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.6.0
