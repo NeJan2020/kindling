@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <sys/un.h>
 #include <string>
-#include <cstring>
 #include <iostream>
 #include <zmq.h>
 #include <regex>
@@ -41,13 +40,6 @@ void publisher::consume_sysdig_event(sinsp_evt *evt, int pid, converter *sysdigC
     }
     // convert sysdig event to kindling event
     if (m_selector->select(evt->get_type(), ((sysdig_converter *) sysdigConverter)->get_kindling_category(evt))) {
-
-        if(evt->get_type() == PPME_SCHEDSWITCH_6_E){
-            if(*((uint64_t *)(evt->get_param(1)->m_val)) <= 100){ //filter the zero major page fault
-                return;
-            }
-        }
-
         auto it = m_kindlingEventLists.find(sysdigConverter);
         KindlingEventList* kindlingEventList;
         if (it == m_kindlingEventLists.end()) {
