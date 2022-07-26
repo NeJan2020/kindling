@@ -2,15 +2,11 @@ package flattenexporter
 
 import (
 	"strconv"
-	"sync"
-	"testing"
 
-	"github.com/Kindling-project/kindling/collector/component"
 	"github.com/Kindling-project/kindling/collector/model"
 	"github.com/Kindling-project/kindling/collector/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/model/constnames"
 	"github.com/Kindling-project/kindling/collector/model/constvalues"
-	"github.com/spf13/viper"
 )
 
 func makeSingleDataGroup(i int) *model.DataGroup {
@@ -157,29 +153,6 @@ func makeTcpStatsDataGroup(i int) *model.DataGroup {
 	return MetricsGroup
 }
 
-func makePageFaultDataGroup(i int) *model.DataGroup {
-	MetricsGroup := &model.DataGroup{
-		Name: constnames.PgftGaugeGroupName,
-		Metrics: []*model.Metric{
-			model.NewIntMetric("kindling_pagefault_major_total", int64(i)),
-			model.NewIntMetric("kindling_pagefault_minor_total", int64(i)),
-		},
-		Labels:    model.NewAttributeMap(),
-		Timestamp: 19900909090,
-	}
-	MetricsGroup.Labels.AddStringValue("tid", "test-tid"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("pid", "test-pid"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("container_id", "test-container_id"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("namespace", "test-namespace"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("node", "test-node"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("node_ip", "test-node_ip"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("pod", "test-pod"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("service", "test-elasticsearch-svc"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("workload_kind", "test-statefulset"+strconv.Itoa(i))
-	MetricsGroup.Labels.AddStringValue("workload_name", "test-workload_name"+strconv.Itoa(i))
-	return MetricsGroup
-}
-
 func makeTcpMetricDataGroup(i int) *model.DataGroup {
 	MetricsGroup := &model.DataGroup{
 		Name: constnames.TcpConnectMetricGroupName,
@@ -221,45 +194,4 @@ func makeTcpMetricDataGroup(i int) *model.DataGroup {
 	MetricsGroup.Labels.AddBoolValue(constlabels.IsServer, false)
 	MetricsGroup.Labels.AddBoolValue(constlabels.Success, false)
 	return MetricsGroup
-}
-
-func TestInitFlattenExporter(t *testing.T) {
-	InitFlattenExporter(t)
-}
-
-func InitFlattenExporter(t *testing.T) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	configPath := "testdata/kindling-collector-config.yml"
-	viper.SetConfigFile(configPath)
-	err := viper.ReadInConfig()
-	if err != nil {
-		t.Fatalf("error happened when reading config: %v", err)
-	}
-	config := &Config{}
-	err = viper.UnmarshalKey("exporters.flattenexporter", config)
-	if err != nil {
-		t.Fatalf("error happened when unmarshaling config: %v", err)
-	}
-	export := NewExporter(config, component.NewDefaultTelemetryTools())
-	for i := 0; i < 1; i++ {
-		//go export.Consume(makeSingleDataGroup(i))
-		//time.Sleep(1 * time.Second)
-		//go export.Consume(makePageFaultDataGroup(i))
-	}
-
-	for i := 1; i < 2; i++ {
-		//go export.Consume(makeSingleDataGroup(i))
-		//go export.Consume(makeAggNetDataGroup(i))
-		//go export.Consume(makeTcpStatsDataGroup(i))
-		go export.Consume(makePageFaultDataGroup(i))
-
-		//go export.Consume(makeTcpMetricDataGroup(i))
-	}
-	for i := 0; i < 10; i++ {
-		//go export.Consume(makeTcpStatsDataGroup(i))
-		//time.Sleep(1 * time.Second)
-	}
-
-	wg.Wait()
 }

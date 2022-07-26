@@ -2,12 +2,13 @@ package flattenexporter
 
 import (
 	"fmt"
+	"net/url"
+
 	flattenTraces "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
 	flattenMetrics "github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/data/protogen/metrics/flatten"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/component"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/consumer"
 	"github.com/Kindling-project/kindling/collector/consumer/exporter/flattenexporter/internal/exporterhelper"
-	"net/url"
 )
 
 func createTracesExporter(cfg *Cfg) (component.TracesExporter, error) {
