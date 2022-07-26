@@ -51,7 +51,7 @@ Service metrics are generated from the server-side events, which are used to sho
   
 | **Label** | **Example** | **Notes** |
 | --- | --- | --- |
-| `request_content` | select employee | SQL of MySQL. SQL has been truncated to avoid high-cardinality. The format is ['operation' 'space' 'table']. |
+| `request_content` | select employee | SQL of MySQL. SQL has been truncated to avoid high-cardinality. The format is ['operation' 'space' 'table' '*']. |
 | `response_content` | 1064 | Error code of MySQL. Only applicable when the response is in error type. See [codes introduction](https://dev.mysql.com/doc/mysql-errors/5.7/en/error-reference-introduction.html).|
 
 - When protocol is `kafka`:
@@ -225,7 +225,8 @@ We made some rules for considering whether a request is abnormal. For the abnorm
 ### Labels List
 | **Label Name** | **Example** | **Notes** |
 | --- | --- | --- |
-| `pid` | 1024 | The client's process ID |
+| `pid` | 1024 | The client's process ID|
+| `comm` | java | The client's process command|
 | `src_node` | slave-node1 | Which node the source pod is on |
 | `src_namespace` | default | Namespace of the source pod |
 | `src_workload_kind` | deployment | Workload kind of the source pod |
@@ -254,6 +255,7 @@ We made some rules for considering whether a request is abnormal. For the abnorm
 
 **Note 2**: The field `errno` is not `0` only if the TCP socket is blocking and there is an error happened. There are multiple possible values it could contain. See the `ERRORS` section of the [connect(2) manual](https://man7.org/linux/man-pages/man2/connect.2.html) for more details.
 
+**Note 3**: The field `pid` and `comm` will not exist if you set `need_process_info` to `false` (default is false), that will reduce the pressure of Prometheus.
 
 ## PromQL Example
 Here are some examples of how to use these metrics in Prometheus, which can help you understand them faster.
