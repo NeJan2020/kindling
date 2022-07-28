@@ -45,14 +45,14 @@ require (
 	go.opentelemetry.io/otel/metric v0.31.0
 	go.opentelemetry.io/otel/sdk v1.8.0
 	go.opentelemetry.io/otel/sdk/export/metric v0.25.0
-	go.opentelemetry.io/otel/sdk/metric v0.31.0
+	go.opentelemetry.io/otel/sdk/metric v0.25.0
 	go.opentelemetry.io/otel/trace v1.8.0
-	go.uber.org/multierr v1.8.0
+	go.uber.org/multierr v1.7.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
-	google.golang.org/grpc v1.48.0
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	k8s.io/api v0.22.5

@@ -13,6 +13,7 @@ static sinsp *inspector = nullptr;
 sinsp_evt_formatter *formatter = nullptr;
 bool printEvent = false;
 int cnt = 0;
+int pid;
 map<string, ppm_event_type> m_events;
 map<string, Category> m_categories;
 int16_t event_filters[1024][16];
@@ -69,6 +70,7 @@ void init_probe()
 	}
 	string bpf_probe;
 	inspector = new sinsp();
+	pid = getpid();
 	init_sub_label();
 	string output_format = "*%evt.num %evt.outputtime %evt.cpu %container.name (%container.id) %proc.name (%thread.tid:%thread.vtid) %evt.dir %evt.type %evt.info";
 	formatter = new sinsp_evt_formatter(inspector, output_format);
@@ -154,6 +156,9 @@ int getEvent(void **pp_kindling_event)
 	auto threadInfo = ev->get_thread_info();
 	if(threadInfo == nullptr)
 	{
+		return -1;
+	}
+	if (threadInfo->m_ptid == (__int64_t) pid || threadInfo->m_pid == (__int64_t) pid || threadInfo->m_pid == 0) {
 		return -1;
 	}
 

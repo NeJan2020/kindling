@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol"
 	"github.com/Kindling-project/kindling/collector/pkg/metadata/conntracker"
 	"github.com/Kindling-project/kindling/collector/pkg/model"
 )
@@ -338,4 +339,68 @@ func getMessagePairKey(evt *model.KindlingEvent) messagePairKey {
 			fd:  evt.GetFd(),
 		}
 	}
+}
+
+type frameData struct {
+	event   *model.KindlingEvent
+	message *protocol.PayloadMessage
+	id      int64
+	matched bool
+}
+
+func NewFrameData(event *model.KindlingEvent, message *protocol.PayloadMessage, id int64) *frameData {
+	return &frameData{
+		event:   event,
+		message: message,
+		id:      id,
+	}
+}
+
+func (frame *frameData) match(frames []*frameData) *frameData {
+	for _, match := range frames {
+		if match.id == frame.id {
+			return match
+		}
+	}
+	return nil
+}
+
+func (frame *frameData) markMatched() {
+	frame.matched = true
+}
+
+func (frame *frameData) isMatched() bool {
+	return frame.matched
+}
+
+type rpcPair struct {
+	event      *model.KindlingEvent
+	attributes *model.AttributeMap
+	size       int64
+	timestamp  uint64
+	latency    uint64
+}
+
+func (rp *rpcPair) getSentTime() int64 {
+	return int64(rp.event.GetLatency())
+}
+
+func (rp *rpcPair) getWaitingTime() int64 {
+	return int64(rp.timestamp - rp.latency - rp.event.Timestamp)
+}
+
+func (rp *rpcPair) getDownloadTime() int64 {
+	return int64(rp.latency)
+}
+
+func (rp *rpcPair) getRquestSize() uint64 {
+	return uint64(rp.event.GetResVal())
+}
+
+func (rp *rpcPair) getResponseSize() uint64 {
+	return uint64(rp.size)
+}
+
+func (rp *rpcPair) getDuration() uint64 {
+	return rp.timestamp + rp.event.GetLatency() - rp.event.Timestamp
 }
