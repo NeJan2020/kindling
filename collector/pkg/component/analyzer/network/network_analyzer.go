@@ -13,6 +13,7 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol/factory"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer"
 	conntracker2 "github.com/Kindling-project/kindling/collector/pkg/metadata/conntracker"
+	"github.com/Kindling-project/kindling/collector/pkg/metadata/kubernetes"
 	"github.com/Kindling-project/kindling/collector/pkg/model/constnames"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -189,9 +190,14 @@ func (na *NetworkAnalyzer) ConsumeEvent(evt *model.KindlingEvent) error {
 				if !isRequest {
 					respMsg := protocol.NewResponseMessage(evt.GetData(), model.NewAttributeMap())
 					if na.dubboParser.ParseResponse(respMsg) {
-						// TODO Replace port by k8s cache API (evt.GetDip(), evt.GetDport())
-						port := evt.GetDport()
-						rpcData := model.NewRpcData(evt, rpcId, GetRpcClients().hostIp, port, respMsg.GetAttributes())
+						var dPort uint32
+						// TODO It 's not a good idea to call K8sCache here , since k8sMetedata may not enable , need to update
+						if port, find := kubernetes.MetaDataCache.SearchLocalPublicPortByPodIpAndPrivatePort(kubernetes.Port(evt.GetDport()), evt.GetDip()); find {
+							dPort = uint32(port)
+						} else {
+							dPort = evt.GetDport()
+						}
+						rpcData := model.NewRpcData(evt, rpcId, GetRpcClients().hostIp, dPort, respMsg.GetAttributes())
 						GetRpcClients().CacheRpcData(fd.Sip[0], rpcData)
 					}
 				}
