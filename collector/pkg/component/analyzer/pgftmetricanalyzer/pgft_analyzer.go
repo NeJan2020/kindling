@@ -20,14 +20,22 @@ const (
 )
 
 type PgftMetricAnalyzer struct {
-	consumers []consumer.Consumer
-	telemetry *component.TelemetryTools
+	consumers     []consumer.Consumer
+	telemetry     *component.TelemetryTools
+	localNodeName string
 }
 
 func NewPgftMetricAnalyzer(cfg interface{}, telemetry *component.TelemetryTools, nextConsumers []consumer.Consumer) analyzer.Analyzer {
+	var localNodeName string
+	var err error
+	if localNodeName, err = getHostNameFromEnv(); err != nil {
+		telemetry.Logger.Warn("Local NodeName can not found", zap.Error(err))
+	}
+
 	retAnalyzer := &PgftMetricAnalyzer{
-		consumers: nextConsumers,
-		telemetry: telemetry,
+		consumers:     nextConsumers,
+		telemetry:     telemetry,
+		localNodeName: localNodeName,
 	}
 	return retAnalyzer
 }
@@ -119,13 +127,7 @@ func (a *PgftMetricAnalyzer) getPageFaultLabels(event *model.KindlingEvent) (*mo
 	tid := (int64)(threadinfo.GetTid())
 	pid := (int64)(threadinfo.GetPid())
 
-	var localNodeName string
-	var err error
-	if localNodeName, err = getHostNameFromEnv(); err != nil {
-		return labels, fmt.Errorf("localName not found with %s", event.Name)
-	}
-
-	labels.AddStringValue(constlabels.Node, localNodeName)
+	labels.AddStringValue(constlabels.Node, a.localNodeName)
 	labels.AddIntValue(constlabels.Tid, tid)
 	labels.AddIntValue(constlabels.Pid, pid)
 	labels.AddStringValue(constlabels.ContainerId, containerId)

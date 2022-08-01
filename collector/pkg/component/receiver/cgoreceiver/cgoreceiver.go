@@ -93,7 +93,7 @@ func (r *CgoReceiver) initPageFaultEvent() {
 		r.eventChannel <- event
 		r.stats.add(event.Name, 1)
 	}
-	r.telemetry.Logger.Info("pagefault init:", zap.Int("the total number of init pagefault threads", pageCnt))
+	r.telemetry.Logger.Info("pagefault init successed:", zap.Int("init_threads_count", pageCnt))
 
 }
 

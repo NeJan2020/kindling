@@ -86,13 +86,7 @@ func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 	return p.nextConsumer.Consume(dataGroup)
 }
 
-var cnt int = 0
-
 func (p *K8sMetadataProcessor) processPgftMetric(dataGroup *model.DataGroup) {
-	if cnt%10 == 0 {
-		p.telemetry.Logger.Info("pagefault_from_processor: ", zap.Int("num:", cnt))
-	}
-	cnt++
 	p.addK8sMetaDataForPgft(dataGroup)
 }
 
