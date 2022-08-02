@@ -96,7 +96,7 @@ type ContainerNetInfo struct {
 	IsDeleted   bool   `json:"isDeleted"`
 
 	// Will not transfer
-	containerRef *K8sContainerInfo
+	ContainerRef *K8sContainerInfo `json:"-"`
 }
 
 type DSFRule struct {
@@ -139,7 +139,7 @@ func (d *DSFRuleMap) createAndAddRule(publicPort Port, containerRef *K8sContaine
 		Container: ContainerNetInfo{
 			ContainerId:  containerRef.ContainerId,
 			PrivatePort:  Port(portInfo.ContainerPort),
-			containerRef: containerRef,
+			ContainerRef: containerRef,
 		},
 	}
 	d.updateChan <- rule
@@ -169,7 +169,7 @@ func (d *DSFRuleMap) UpdateRemoteDSFRule(rules ...*DSFRule) {
 
 func (d *DSFRuleMap) SearchByPublicPortAndNodeIp(publicPort Port, nodeIp NodeIp) (*ContainerNetInfo, bool) {
 	d.globalRuleMux.RLock()
-	defer d.globalRuleMux.Unlock()
+	defer d.globalRuleMux.RUnlock()
 	if portMap, ok := d.dstRules[nodeIp]; ok {
 		res, ok := portMap[publicPort]
 		return res, ok
@@ -180,10 +180,10 @@ func (d *DSFRuleMap) SearchByPublicPortAndNodeIp(publicPort Port, nodeIp NodeIp)
 
 func (d *DSFRuleMap) SearchLocalPublicPortByPodIpAndPrivatePort(privatePort Port, podIp string) (Port, bool) {
 	d.localRuleMux.RLock()
-	defer d.localRuleMux.Unlock()
+	defer d.localRuleMux.RUnlock()
 	for _, portMap := range d.localRuleMap {
 		for publicPort, info := range portMap {
-			if info.containerRef.RefPodInfo.Ip == podIp && info.PrivatePort == privatePort {
+			if info.ContainerRef.RefPodInfo.Ip == podIp && info.PrivatePort == privatePort {
 				return publicPort, true
 			}
 		}
@@ -198,7 +198,7 @@ func (d *DSFRuleMap) SearchLocalPublicPortByContainerId(containerId string) ([]P
 	defer d.localRuleMux.RUnlock()
 	for _, portMap := range d.localRuleMap {
 		for publicPort, info := range portMap {
-			if info.containerRef.ContainerId == containerId {
+			if info.ContainerRef.ContainerId == containerId {
 				ports = append(ports, Port(publicPort))
 				find = true
 			}
@@ -217,7 +217,7 @@ func (d *DSFRuleMap) UpdateLocalDSFRule(rules ...*DSFRule) {
 func (d *DSFRuleMap) updateDSFRule(rule *DSFRule) {
 	if rule.remote {
 		if containerRef, ok := MetaDataCache.GetByContainerId(rule.Container.ContainerId); ok {
-			rule.Container.containerRef = containerRef
+			rule.Container.ContainerRef = containerRef
 		}
 	} else {
 		d.updateLocalMap(rule)
@@ -334,7 +334,7 @@ func CreateDSFRuleByContainerPrivatePorts(
 			ContainerId:  containerRef.ContainerId,
 			PrivatePort:  Port(privatePort),
 			IsDeleted:    false,
-			containerRef: containerRef,
+			ContainerRef: containerRef,
 		}
 		if publicPorts, ok := portMap[privatePort]; ok {
 			for _, publicPort := range publicPorts {
@@ -477,7 +477,6 @@ func (c *ConfigServerClient) UpdateDSF(request *DSFSyncRequest) *DSFSyncResponse
 
 func (c *ConfigServerClient) postDSFRequest(request *DSFSyncRequest, endpoint string) *DSFSyncResponse {
 	msgBytes, _ := json.Marshal(request)
-	fmt.Printf("[%s] %s: %s\n", request.HostIp, endpoint[30:], string(msgBytes))
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(msgBytes))
 	if err != nil {
 		log.Printf("error occurred when creating post request to %s:%+v\n", endpoint, err)

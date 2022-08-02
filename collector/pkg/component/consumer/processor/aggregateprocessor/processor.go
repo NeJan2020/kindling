@@ -177,6 +177,8 @@ func newNetRequestLabelSelectors() *aggregator.LabelSelectors {
 		aggregator.LabelSelector{Name: constlabels.ContentKey, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.DnsDomain, VType: aggregator.StringType},
 		aggregator.LabelSelector{Name: constlabels.KafkaTopic, VType: aggregator.StringType},
+		aggregator.LabelSelector{Name: constlabels.DubboErrorCode, VType: aggregator.IntType},
+		// WARNING The max size of LabelSelector is defined by aggregator.maxLabelKeySize=40
 	)
 }
 

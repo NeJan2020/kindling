@@ -259,6 +259,8 @@ var topologyProtocol = []extraLabelsParam{
 		{constlabels.StatusCode, constlabels.DnsRcode, FromInt64ToString},
 	}, extraLabelsKey{DNS}},
 	{[]dictionary{
+		// TODO Debug
+		{constlabels.RequestContent, constlabels.ContentKey, String},
 		{constlabels.StatusCode, constlabels.DubboErrorCode, FromInt64ToString},
 	}, extraLabelsKey{DUBBO}},
 	{[]dictionary{

@@ -183,11 +183,28 @@ func (p *K8sMetadataProcessor) addK8sMetaDataForClientLabel(labelMap *model.Attr
 	} else if resInfo, ok := p.metadata.GetContainerByIpPort(dstIp, uint32(dstPort)); ok {
 		// DstIp is IP of a container
 		addContainerMetaInfoLabelDST(labelMap, resInfo)
-	} else if resInfo, ok := p.metadata.GetContainerByHostIpPort(dstIp, uint32(dstPort)); ok {
+	} else if resInfo, ok := p.metadata.GetContainerByHostIpPort(dstIp, uint32(dstPort)); !p.config.DSFConfig.EnableDebug && ok {
 		addContainerMetaInfoLabelDST(labelMap, resInfo)
 		labelMap.UpdateAddStringValue(constlabels.DstIp, resInfo.RefPodInfo.Ip)
 		labelMap.UpdateAddIntValue(constlabels.DstPort, int64(resInfo.HostPortMap[int32(dstPort)]))
 		labelMap.UpdateAddStringValue(constlabels.DstService, dstIp+":"+strconv.Itoa(int(dstPort)))
+	} else if containerNetInfo, ok := p.metadata.SearchContainerInfoByPublicPortAndNodeIp(uint32(dstPort), dstIp); ok {
+		if containerNetInfo.ContainerRef == nil {
+			if containerInfo, ok := p.metadata.GetByContainerId(containerNetInfo.ContainerId); ok {
+				addContainerMetaInfoLabelDST(labelMap, containerInfo)
+				labelMap.UpdateAddStringValue(constlabels.DstIp, containerInfo.RefPodInfo.Ip)
+				labelMap.UpdateAddIntValue(constlabels.DstPort, int64(containerNetInfo.PrivatePort))
+				labelMap.UpdateAddStringValue(constlabels.DstService, dstIp+":"+strconv.Itoa(int(dstPort)))
+
+				containerNetInfo.ContainerRef = containerInfo
+			}
+		} else {
+			containerInfo := containerNetInfo.ContainerRef
+			addContainerMetaInfoLabelDST(labelMap, containerInfo)
+			labelMap.UpdateAddStringValue(constlabels.DstIp, containerInfo.RefPodInfo.Ip)
+			labelMap.UpdateAddIntValue(constlabels.DstPort, int64(containerNetInfo.PrivatePort))
+			labelMap.UpdateAddStringValue(constlabels.DstService, dstIp+":"+strconv.Itoa(int(dstPort)))
+		}
 	} else {
 		// DstIp is a IP from external
 		if nodeName, ok := p.metadata.GetNodeNameByIp(dstIp); ok {
