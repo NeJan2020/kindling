@@ -17,7 +17,6 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/model/constnames"
 	"go.opentelemetry.io/otel/attribute"
 
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/Kindling-project/kindling/collector/pkg/model"
@@ -365,10 +364,8 @@ func (na *NetworkAnalyzer) parseRpcAndDistributeTraceMetric(pairs []*rpcPair) er
 
 func (na *NetworkAnalyzer) distributeDataGroups(records []*model.DataGroup) error {
 	for _, record := range records {
-		if ce := na.telemetry.Logger.Check(zapcore.DebugLevel, "NetworkAnalyzer To NextProcess: "); ce != nil {
-			ce.Write(
-				zap.String("record", record.String()),
-			)
+		if ce := na.telemetry.Logger.Check(zapcore.DebugLevel, ""); ce != nil {
+			na.telemetry.Logger.Debug("NetworkAnalyzer To NextProcess:\n" + record.String())
 		}
 		netanalyzerParsedRequestTotal.Add(context.Background(), 1, attribute.String("protocol", record.Labels.GetStringValue(constlabels.Protocol)))
 		for _, nexConsumer := range na.nextConsumers {
