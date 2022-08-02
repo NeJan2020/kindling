@@ -1,9 +1,10 @@
 package aggregator
 
 import (
-	"github.com/Kindling-project/kindling/collector/model"
 	"sort"
 	"strconv"
+
+	"github.com/Kindling-project/kindling/collector/pkg/model"
 )
 
 type vType string
@@ -49,7 +50,7 @@ func (s *LabelSelectors) AppendSelectors(selectors ...LabelSelector) {
 	s.selectors = append(s.selectors, selectors...)
 }
 
-const maxLabelKeySize = 35
+const maxLabelKeySize = 40
 
 type LabelKeys struct {
 	// LabelKeys will be used as key of map, so it is must be an array instead of a slice.

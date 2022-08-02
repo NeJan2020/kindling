@@ -51,7 +51,7 @@ Service metrics are generated from the server-side events, which are used to sho
   
 | **Label** | **Example** | **Notes** |
 | --- | --- | --- |
-| `request_content` | select employee | SQL of MySQL. SQL has been truncated to avoid high-cardinality. The format is ['operation' 'space' 'table']. |
+| `request_content` | select employee | SQL of MySQL. SQL has been truncated to avoid high-cardinality. The format is ['operation' 'space' 'table' '*']. |
 | `response_content` | 1064 | Error code of MySQL. Only applicable when the response is in error type. See [codes introduction](https://dev.mysql.com/doc/mysql-errors/5.7/en/error-reference-introduction.html).|
 
 - When protocol is `kafka`:
@@ -225,7 +225,8 @@ We made some rules for considering whether a request is abnormal. For the abnorm
 ### Labels List
 | **Label Name** | **Example** | **Notes** |
 | --- | --- | --- |
-| `pid` | 1024 | The client's process ID |
+| `pid` | 1024 | The client's process ID|
+| `comm` | java | The client's process command|
 | `src_node` | slave-node1 | Which node the source pod is on |
 | `src_namespace` | default | Namespace of the source pod |
 | `src_workload_kind` | deployment | Workload kind of the source pod |
@@ -254,28 +255,7 @@ We made some rules for considering whether a request is abnormal. For the abnorm
 
 **Note 2**: The field `errno` is not `0` only if the TCP socket is blocking and there is an error happened. There are multiple possible values it could contain. See the `ERRORS` section of the [connect(2) manual](https://man7.org/linux/man-pages/man2/connect.2.html) for more details.
 
-
-## Page Fault Metrics
-### Metrics List
-| **Metric Name** | **Type** | **Description** |
-| --- | --- | --- |
-| `kindling_pagefault_major_total` | Gauge | Total number of major page faults|
-| `kindling_pagefault_minor_total` | Gauge | Total number of minor page faults|
-
-### Labels List
-| **Label Name** | **Example** | **Notes** |
-| --- | --- | --- |
-| `node` | worker-1 | Node name represented in Kubernetes cluster |
-| `namespace` | default | Namespace of the pod |
-| `workload_kind` | daemonset | K8sResourceType |
-| `workload_name` | api-ds | K8sResourceName |
-| `service` | api | One of the services that target this pod |
-| `pod` | api-ds-xxxx | The name of the pod |
-| `container` | api-container | The name of the container |
-| `container_id` | 1a2b3c4d5e6f | The shorten container id which contains 12 characters |
-| `ip` | 10.1.11.23 | The IP address of the entity |
-| `tid` | 1213 | The thread tid of page fault occurred |
-| `pid` | 1234 | The process pid of page fault occurred |
+**Note 3**: The field `pid` and `comm` will not exist if you set `need_process_info` to `false` (default is false), that will reduce the pressure of Prometheus.
 
 ## PromQL Example
 Here are some examples of how to use these metrics in Prometheus, which can help you understand them faster.
