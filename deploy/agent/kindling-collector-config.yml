@@ -93,9 +93,9 @@ processors:
     kube_config_dir: /root/.kube/config
     grace_delete_period: 60
     dsf_config:
-      enable: false
+      enable: true
       debug: false
-      config_server_addr: http://apm-configserver-svc:8080
+      config_server_addr: http://apm-configserver-svc:8888
   aggregateprocessor:
     # Aggregation duration window size. The unit is second.
     ticker_interval: 5
@@ -169,10 +169,9 @@ exporters:
       endpoint: 10.10.10.10:8080
     stdout:
       collect_period: 15s
-  flatten:
+  flattenexporter:
     master_ip: "yanshi_default_default"
-    #endpoint: "http://10.10.102.97:31476"
-    endpoint: "http://127.0.0.1:8080"
+    endpoint: "http://apm-data-receiver:8080"
     insecure: true
     timeout: 10s
     read_buffer_size: 4096
