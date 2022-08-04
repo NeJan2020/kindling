@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <chrono>
 
+int pid;
+
 static sinsp *inspector = nullptr;
 sinsp_evt_formatter *formatter = nullptr;
 bool printEvent = false;
