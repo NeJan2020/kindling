@@ -177,7 +177,11 @@ func onAdd(obj interface{}) {
 			RefPodInfo:  cachePodInfo,
 		}
 		MetaDataCache.AddByContainerId(shortenContainerId, containerInfo)
-		if dsfEnable && portMap == nil && pod.Status.HostIP == hostIp && runtimeService != nil {
+		if dsfEnable &&
+			portMap == nil &&
+			pod.Status.HostIP == hostIp &&
+			runtimeService != nil &&
+			pod.Status.Phase == corev1.PodRunning {
 			portMap, err = runtimeService.GetPortMappingByContainerId(TruncateComplateContainerId(containerStatus.ContainerID))
 			if err != nil {
 				fmt.Printf("Failed to get portMap for container: %v,err is : %v\n", TruncateContainerId(containerStatus.ContainerID), err)
