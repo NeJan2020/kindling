@@ -161,9 +161,9 @@ func (d *DSFRuleMap) deleteAndAddRule(publicPorts ...Port) {
 }
 
 func (d *DSFRuleMap) UpdateRemoteDSFRule(rules ...*DSFRule) {
-	for i := 0; i < len(rules); i++ {
-		rules[i].remote = true
-		d.updateChan <- rules[i]
+	for i := len(rules); i > 0; i-- {
+		rules[i-1].remote = true
+		d.updateChan <- rules[i-1]
 	}
 }
 
