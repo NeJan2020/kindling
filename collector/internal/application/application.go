@@ -91,6 +91,7 @@ func (a *Application) registerFactory() {
 	a.componentsFactory.RegisterProcessor(aggregateprocessor.Type, aggregateprocessor.New, aggregateprocessor.NewDefaultConfig())
 	a.componentsFactory.RegisterAnalyzer(pgftmetricanalyzer.PgftMetric.String(), pgftmetricanalyzer.NewPgftMetricAnalyzer, &pgftmetricanalyzer.Config{})
 
+	a.componentsFactory.RegisterAnalyzer(slowsyscallanalyzer.SlowSyscallTrace.String(), slowsyscallanalyzer.NewSlowSyscallAnalyzer, &slowsyscallanalyzer.Config{})
 	a.componentsFactory.RegisterAnalyzer(tcpconnectanalyzer.Type.String(), tcpconnectanalyzer.New, tcpconnectanalyzer.NewDefaultConfig())
 	a.componentsFactory.RegisterAnalyzer(tcpstatanalyzer.Tcpstat.String(), tcpstatanalyzer.New, &tcpstatanalyzer.Config{})
 }
@@ -140,14 +141,18 @@ func (a *Application) buildPipeline() error {
 	pgftAnalyzerFactory := a.componentsFactory.Analyzers[pgftmetricanalyzer.PgftMetric.String()]
 	pgftAnalyzer := pgftAnalyzerFactory.NewFunc(pgftAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 
+	//4. slow syscall analyzer
+	slowAnalyzerFactory := a.componentsFactory.Analyzers[slowsyscallanalyzer.SlowSyscallTrace.String()]
+	slowAnalyzer := slowAnalyzerFactory.NewFunc(slowAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+
 	// Initialize receiver packaged with multiple analyzers
 	tcpConnectAnalyzerFactory := a.componentsFactory.Analyzers[tcpconnectanalyzer.Type.String()]
 	tcpConnectAnalyzer := tcpConnectAnalyzerFactory.NewFunc(tcpConnectAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
-	// 3. Tcpstat analyzer
+	//  Tcpstat analyzer
 	tcpstatAnalyzerFactory := a.componentsFactory.Analyzers[tcpstatanalyzer.Tcpstat.String()]
 	tcpstatAnalyzer := tcpstatAnalyzerFactory.NewFunc(tcpstatAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 	// Initialize receiver packaged with multiple analyzers
-	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer,pgftAnalyzer)
+	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer)
 	if err != nil {
 		return fmt.Errorf("error happened while creating analyzer manager: %w", err)
 	}

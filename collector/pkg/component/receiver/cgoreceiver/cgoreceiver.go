@@ -19,6 +19,7 @@ import (
 	analyzerpackage "github.com/Kindling-project/kindling/collector/pkg/component/analyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/receiver"
 	"github.com/Kindling-project/kindling/collector/pkg/model"
+	"github.com/Kindling-project/kindling/collector/pkg/model/constnames"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -28,6 +29,8 @@ const (
 )
 
 type CKindlingEventForGo C.struct_kindling_event_t_for_go
+
+type CEventParamsForSubscribe C.struct_event_params_for_subscribe
 
 type CgoReceiver struct {
 	cfg             *Config
@@ -70,7 +73,50 @@ func (r *CgoReceiver) Start() error {
 	go r.consumeEvents()
 	r.initPageFaultEvent()
 	go r.startGetEvent()
+	r.startGetTimeoutSyscall()
 	return nil
+}
+
+var cnt int = 0
+
+func (r *CgoReceiver) GetTimeoutSyscall() {
+	ticker := time.NewTicker(time.Second * 30)
+	var pKindlingEvent unsafe.Pointer
+	for {
+		select {
+		case <-ticker.C:
+			for {
+
+				res := int(C.getSlowSyscallTimeoutEvent(&pKindlingEvent))
+
+				if res == -1 {
+					break
+				}
+
+				event := convertEvent((*CKindlingEventForGo)(pKindlingEvent))
+				r.eventChannel <- event
+				r.stats.add(event.Name, 1)
+			}
+			r.telemetry.Logger.Sugar().Info("total_number_of_timeout_event: ", zap.Int("num", cnt))
+		}
+	}
+}
+
+func (r *CgoReceiver) startGetTimeoutSyscall() {
+	var SlowSyscallEnabled bool = false
+	for _, value := range r.cfg.SubscribeInfo {
+		if value.Name == "udf-slow_syscall" {
+			SlowSyscallEnabled = true
+			break
+		}
+	}
+
+	if !SlowSyscallEnabled {
+		return
+	}
+
+	go r.GetTimeoutSyscall()
+
 }
 
 func (r *CgoReceiver) initPageFaultEvent() {
@@ -149,12 +195,14 @@ func convertEvent(cgoEvent *CKindlingEventForGo) *model.KindlingEvent {
 	ev.Timestamp = uint64(cgoEvent.timestamp)
 	ev.Name = C.GoString(cgoEvent.name)
 	ev.Category = model.Category(cgoEvent.category)
+	ev.SlowSyscall = int(cgoEvent.slow_syscall)
 	ev.Ctx.ThreadInfo.Pid = uint32(cgoEvent.context.tinfo.pid)
 	ev.Ctx.ThreadInfo.Tid = uint32(cgoEvent.context.tinfo.tid)
 	ev.Ctx.ThreadInfo.Uid = uint32(cgoEvent.context.tinfo.uid)
 	ev.Ctx.ThreadInfo.Gid = uint32(cgoEvent.context.tinfo.gid)
 	ev.Ctx.ThreadInfo.Comm = C.GoString(cgoEvent.context.tinfo.comm)
 	ev.Ctx.ThreadInfo.ContainerId = C.GoString(cgoEvent.context.tinfo.containerId)
+	ev.Ctx.ThreadInfo.Latency = uint64(cgoEvent.context.tinfo.latency)
 	ev.Ctx.FdInfo.Protocol = model.L4Proto(cgoEvent.context.fdInfo.protocol)
 	ev.Ctx.FdInfo.Num = int32(cgoEvent.context.fdInfo.num)
 	ev.Ctx.FdInfo.TypeFd = model.FDType(cgoEvent.context.fdInfo.fdType)
@@ -189,7 +237,14 @@ func (r *CgoReceiver) sendToNextConsumer(evt *model.KindlingEvent) error {
 	if ce := r.telemetry.Logger.Check(zapcore.DebugLevel, ""); ce != nil {
 		r.telemetry.Logger.Debug(fmt.Sprintf("Receive Event: %+v", evt))
 	}
+
 	analyzers := r.analyzerManager.GetConsumableAnalyzers(evt.Name)
+	if evt.GetSlowSyscallCode() > 0 {
+		tmp := r.analyzerManager.GetConsumableAnalyzers(constnames.SlowSyscallEvent)
+		for _, analyzer := range tmp {
+			analyzers = append(analyzers, analyzer)
+		}
+	}
 	if analyzers == nil || len(analyzers) == 0 {
 		r.telemetry.Logger.Info("analyzer not found for event ", zap.String("eventName", evt.Name))
 		return nil
@@ -203,13 +258,44 @@ func (r *CgoReceiver) sendToNextConsumer(evt *model.KindlingEvent) error {
 	return nil
 }
 
-func (r *CgoReceiver) subEvent() {
+func (r *CgoReceiver) subEvent() error {
 	if len(r.cfg.SubscribeInfo) == 0 {
 		r.telemetry.Logger.Warn("No events are subscribed by cgoreceiver. Please check your configuration.")
 	} else {
 		r.telemetry.Logger.Sugar().Infof("The subscribed events are: %v", r.cfg.SubscribeInfo)
 	}
+
 	for _, value := range r.cfg.SubscribeInfo {
-		C.subEventForGo(C.CString(value.Name), C.CString(value.Category))
+		params := value.Params
+		var paramsList []CEventParamsForSubscribe
+		var ok bool
+		var val uint64
+		if value.Name == "udf-slow_syscall" {
+			var temp CEventParamsForSubscribe
+			val, ok = params["latency"]
+			if !ok {
+				return fmt.Errorf("slow syscall sub error: param latency is empty!")
+			}
+			temp.name = C.CString("latency")
+			temp.value = C.uint64_t(val)
+			paramsList = append(paramsList, temp)
+
+			val, ok = params["timeout"]
+			if !ok {
+				return fmt.Errorf("slow syscall sub error: param timeout is empty!")
+			}
+			temp.name = C.CString("timeout")
+			temp.value = C.uint64_t(val)
+			paramsList = append(paramsList, temp)
+
+		}
+		if len(paramsList) == 0 {
+			var temp CEventParamsForSubscribe
+			temp.name = C.CString("none")
+			temp.value = C.uint64_t(0)
+			paramsList = append(paramsList, temp)
+		}
+		C.subEventForGo(C.CString(value.Name), C.CString(value.Category), (unsafe.Pointer)(&paramsList[0]))
 	}
+	return nil
 }

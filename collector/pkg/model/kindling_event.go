@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 import (
 	"fmt"
 	"math"
@@ -253,6 +255,8 @@ type KindlingEvent struct {
 	Category Category `json:"category,omitempty"`
 	// Number of UserAttributes
 	ParamsNumber uint16 `json:"params_number,omitempty"`
+	// Slow Syscall flag
+	SlowSyscall int `json:"slow_syscall,omitempty"`
 	// User-defined Attributions of Kindling Event, now including latency for syscall.
 	UserAttributes UserAttributes `json:"user_attributes,omitempty"`
 	// Context includes Thread information and Fd information.
@@ -308,6 +312,13 @@ func (m *KindlingEvent) GetCategory() Category {
 		return m.Category
 	}
 	return Category_CAT_NONE
+}
+
+func (m *KindlingEvent) GetSlowSyscallCode() int {
+	if m != nil {
+		return m.SlowSyscall
+	}
+	return 0
 }
 
 func (m *KindlingEvent) GetUserAttributes() *[8]KeyValue {
@@ -409,6 +420,8 @@ type Thread struct {
 	ContainerId string `json:"container_id,omitempty"`
 	// ContainerName of thread
 	ContainerName string `json:"container_name,omitempty"`
+	//Syscall latency
+	Latency uint64 `json:"latency,omitempty"`
 }
 
 func (m *Thread) GetPid() uint32 {
@@ -421,6 +434,13 @@ func (m *Thread) GetPid() uint32 {
 func (m *Thread) GetTid() uint32 {
 	if m != nil {
 		return m.Tid
+	}
+	return 0
+}
+
+func (m *Thread) GetLatency() uint64 {
+	if m != nil {
+		return m.Latency
 	}
 	return 0
 }

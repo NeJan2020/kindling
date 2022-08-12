@@ -11,7 +11,8 @@ const (
 	RecvMsgEvent  = "recvmsg"
 	ConnectEvent  = "connect"
 
-	PageFaultEvent = "page_fault"
+	PageFaultEvent   = "page_fault"
+	SlowSyscallEvent = "slow_syscall"
 
 	TcpCloseEvent          = "tcp_close"
 	TcpRcvEstablishedEvent = "tcp_rcv_established"
@@ -30,9 +31,9 @@ const (
 	AggregatedNetRequestMetricGroup = "aggregated_net_request_metric_group"
 
 	TcpMetricGroupName        = "tcp_metric_metric_group"
-	TcpConnectMetricGroupName = "tcp_connect_metric_group"
 	NodeMetricGroupName       = "node_metric_metric_group"
+	TcpConnectMetricGroupName = "tcp_connect_metric_group"
+	PgftMetricGroupName       = "pgft_metric_metric_group"
 	TcpStatsMetricGroup       = "tcp_stats_metric_group"
-
-	PgftMetricGroupName = "pgft_metric_metric_group"
+	SlowSyscallGroupName      = "slow_syscall_trace_group"
 )
