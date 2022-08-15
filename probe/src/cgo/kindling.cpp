@@ -95,6 +95,8 @@ void init_probe()
 	string output_format = "*%evt.num %evt.outputtime %evt.cpu %container.name (%container.id) %proc.name (%thread.tid:%thread.vtid) %evt.dir %evt.type %evt.info";
 	formatter = new sinsp_evt_formatter(inspector, output_format);
 	slow_syscall_open = false;
+	slow.setLatency(0x7FFFFFFF);
+	slow.setTimeout(0x7FFFFFFF);
 	try
 	{
 		inspector = new sinsp();
@@ -420,7 +422,7 @@ int getEvent(void **pp_kindling_event)
 	p_kindling_event->context.tinfo.tid = threadInfo->m_tid;
 	p_kindling_event->context.tinfo.uid = threadInfo->m_uid;
 	p_kindling_event->context.tinfo.gid = threadInfo->m_gid;
-	p_kindling_event->context.tinfo.latency = 0;
+	p_kindling_event->context.tinfo.latency = threadInfo->m_latency;
 	p_kindling_event->context.fdInfo.num = ev->get_fd_num();
 	if(nullptr != fdInfo)
 	{
@@ -475,10 +477,9 @@ int getEvent(void **pp_kindling_event)
 
 	uint16_t userAttNumber = 0;
 	p_kindling_event->slow_syscall = NOT_SLOW_SYSCALL;
-	if(source == SYSCALL_EXIT) {
+	if(slow_syscall_open && source == SYSCALL_EXIT) {
 		if(threadInfo->m_latency / 1e6 >= slow.getLatency()){
 			p_kindling_event->slow_syscall = IS_SLOW_SYSCALL;
-			p_kindling_event->context.tinfo.latency = threadInfo->m_latency;
 		}
 		bool exist = slow.getTidExist(threadInfo->m_tid, &slow_map_mutex);
 		if(exist){
