@@ -80,7 +80,7 @@ func (r *CgoReceiver) Start() error {
 var cnt int = 0
 
 func (r *CgoReceiver) GetTimeoutSyscall() {
-	ticker := time.NewTicker(time.Second * 30)
+	ticker := time.NewTicker(time.Second * 15)
 	var pKindlingEvent unsafe.Pointer
 	for {
 		select {
