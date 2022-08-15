@@ -92,6 +92,10 @@ func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 	return p.nextConsumer.Consume(dataGroup)
 }
 
+func (p *K8sMetadataProcessor) processSlowSyscallTrace(dataGroup *model.DataGroup) {
+	p.addK8sMetaDataForSlowSyscall(dataGroup)
+}
+
 func (p *K8sMetadataProcessor) addK8sMetaDataForSlowSyscall(dataGroup *model.DataGroup) {
 	labelMap := dataGroup.Labels
 	containerId := labelMap.GetStringValue(constlabels.ContainerId)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/pgftmetricanalyzer"
+	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/slowsyscallanalyzer"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer"
