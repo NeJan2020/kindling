@@ -26,7 +26,7 @@ receivers:
       - name: kprobe-tcp_set_state
       - name: tracepoint-page_fault
       - name: udf-slow_syscall
-        params: 
+        params:
           latency: 1
           timeout: 1000
 analyzers:
