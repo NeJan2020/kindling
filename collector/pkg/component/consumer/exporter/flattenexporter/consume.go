@@ -26,7 +26,7 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 
 	batchTraceProcessor := (*e.batchProcessors)[constant.Traces]
 	batchMetricProcessor := (*e.batchProcessors)[constant.Metrics]
-	if ce := e.Telemetry.Logger.Check(zap.DebugLevel, "exporter receives a dataGroup: "); ce != nil {
+	if ce := e.Telemetry.Logger.Check(zap.DebugLevel, "exporter receives a dataGroup111: "); ce != nil {
 		ce.Write(
 			zap.String("dataGroup", dataGroup.String()),
 		)
