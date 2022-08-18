@@ -47,7 +47,8 @@ void init_sub_label()
 void sub_event(char *eventName, char *category, event_params_for_subscribe params[])
 {
 	cout << "sub event name: " << eventName << "  &&  category: " << category << endl;
-	if(strcmp(eventName, "udf-slow_syscall") == 0){ //subscribe slow syscall
+	if(strcmp(eventName, "udf-slow_syscall") == 0)//subscribe slow syscall
+	{ 
 		slow.setLatency(params[0].value);
 		slow.setTimeout(params[1].value);
 		slow.subSyscall(inspector, m_events);
@@ -57,7 +58,8 @@ void sub_event(char *eventName, char *category, event_params_for_subscribe param
 	auto it_type = m_events.find(eventName);
 	if(it_type != m_events.end())
 	{
-		if(it_type->second == PPME_PAGE_FAULT_E){
+		if(it_type->second == PPME_PAGE_FAULT_E)
+		{
 			inspector->enable_page_faults();
 			inspector->set_eventmask(PPME_PAGE_FAULT_X);
 			inspector->set_eventmask(PPME_PAGE_FAULT_E);
@@ -85,7 +87,8 @@ void init_probe()
 {
 	bool bpf = false;
 	char* isPrintEvent = getenv("IS_PRINT_EVENT");
-	if (isPrintEvent != nullptr && strncmp("true", isPrintEvent, sizeof (isPrintEvent))==0){
+	if (isPrintEvent != nullptr && strncmp("true", isPrintEvent, sizeof (isPrintEvent))==0)
+	{
 		printEvent = true;
 	}
 	string bpf_probe;
@@ -160,16 +163,19 @@ void init_probe()
 
 /* convert process information to main thread information.
 	The page fault data we want is limited to thread granularity.*/
-void convertThreadsTable(){
+void convertThreadsTable()
+{
 	unordered_map<int64_t, int64_t> maj_mp, min_mp; //from pid to maj or min value
 	
-	for(auto e: threadstable){
+	for(auto e: threadstable)
+	{
 		sinsp_threadinfo* tmp = e.second.get();
         if(tmp->m_pid == tmp->m_tid) continue;
         maj_mp[tmp->m_pid] += tmp->m_pfmajor;
         min_mp[tmp->m_pid] += tmp->m_pfminor;
 	}
-    for(auto e: min_mp){
+    for(auto e: min_mp)
+	{
         auto tmp = threadstable.find(e.first);
         sinsp_threadinfo* temp = inspector->build_threadinfo();
         temp->m_pid = temp->m_tid = e.first;
@@ -180,11 +186,13 @@ void convertThreadsTable(){
 	cout << "total number of threads initialized is " << threadstable.size() << endl;
 }
 
-void initKindlingEvent(kindling_event_t_for_go *&p_kindling_event, int paramNumber){
+void initKindlingEvent(kindling_event_t_for_go *&p_kindling_event, int paramNumber)
+{
 	p_kindling_event->name = (char *)malloc(sizeof(char) * 1024);
 	p_kindling_event->context.tinfo.comm = (char *)malloc(sizeof(char) * 256);
 	p_kindling_event->context.tinfo.containerId = (char *)malloc(sizeof(char) * 256);
 	p_kindling_event->context.tinfo.latency = 0;
+	p_kindling_event->slow_syscall = NOT_SLOW_SYSCALL;
 	p_kindling_event->context.fdInfo.filename = (char *)malloc(sizeof(char) * 1024);
 	p_kindling_event->context.fdInfo.directory = (char *)malloc(sizeof(char) * 1024);
 
@@ -197,7 +205,8 @@ void initKindlingEvent(kindling_event_t_for_go *&p_kindling_event, int paramNumb
 
 int getPageFaultThreadEvent(void **pp_kindling_event){
 	static unordered_map<int64_t, threadinfo_map_t::ptr_t>::iterator it = threadstable.begin();
-	if(it == threadstable.end()){
+	if(it == threadstable.end())
+	{
 		return -1;
 	}
 	sinsp_threadinfo* threadInfo = it->second.get();
@@ -246,7 +255,8 @@ int getPageFaultThreadEvent(void **pp_kindling_event){
 	return 1;
 }
 
-void initPageFaultOffData(){
+void initPageFaultOffData()
+{
 	threadinfo_map_t *threadsmap = inspector->m_thread_manager->get_threads();
     threadstable = threadsmap->getThreadsTable();
 
@@ -259,19 +269,23 @@ void initPageFaultOffData(){
 	inspector->update_pagefaults_threads_number(-1, threadstable.size());
 }
 
-int getSyscallTimeoutEvent(void **pp_kindling_event){
+int getSyscallTimeoutEvent(void **pp_kindling_event)
+{
 	slow.getSlowSyscallTimeoutEvent(&slow_map_mutex);
-	if(slow.m_timeout_list.empty()){
+	if(slow.m_timeout_list.empty())
+	{
 		return -1;
 	} 
 	static vector<int>::iterator it = slow.m_timeout_list.begin();
 	static vector<SyscallElem>::iterator itt = slow.m_timeout_elems.begin();
-	if(slow.iter_flag){
+	if(slow.iter_flag)
+	{
 		it = slow.m_timeout_list.begin();
 		itt = slow.m_timeout_elems.begin();
 		slow.iter_flag = false;
 	}
-	if(it == slow.m_timeout_list.end()){
+	if(it == slow.m_timeout_list.end())
+	{
 		slow.m_timeout_list.clear();
 		slow.m_timeout_elems.clear();
 		slow.iter_flag = true;
@@ -323,7 +337,8 @@ int getEvent(void **pp_kindling_event)
 	{
 		return -1;
 	}
-	if(ev->get_type() == PPME_PAGE_FAULT_E){
+	if(ev->get_type() == PPME_PAGE_FAULT_E)
+	{
 		int num = inspector->get_pagefault_threads_number();
 		if(num >= 1e6){
 			cout << "clear the page fault map with " << num << " threads..." << endl;
@@ -335,7 +350,8 @@ int getEvent(void **pp_kindling_event)
 	{
 		return -1;
 	}
-	if (threadInfo->m_ptid == (__int64_t) pid || threadInfo->m_pid == (__int64_t) pid || threadInfo->m_pid == 0) {
+	if (threadInfo->m_ptid == (__int64_t) pid || threadInfo->m_pid == (__int64_t) pid || threadInfo->m_pid == 0) 
+	{
 		return -1;
 	}
 
@@ -353,16 +369,21 @@ int getEvent(void **pp_kindling_event)
 	uint16_t ev_type = ev->get_type();
 	uint16_t source = get_kindling_source(ev->get_type());
 
-	if(slow_syscall_open){
-		if(event_filters[ev_type][kindling_category] == 0){
-			if(ev_type == PPME_GENERIC_E || ev_type == PPME_GENERIC_X){
+	if(slow_syscall_open)
+	{
+		if(event_filters[ev_type][kindling_category] == 0)
+		{
+			if(ev_type == PPME_GENERIC_E || ev_type == PPME_GENERIC_X)
+			{
 				return -1;
 			}
-			if(source != SYSCALL_ENTER && source != SYSCALL_EXIT){
+			if(source != SYSCALL_ENTER && source != SYSCALL_EXIT)
+			{
 				return -1;
 			}
 		}
-		if(source == SYSCALL_ENTER){
+		if(source == SYSCALL_ENTER)
+		{
 			SyscallElem tmp;
 			tmp.timestamp = ev->get_ts();
 			tmp.type = ev->get_type();
@@ -372,26 +393,35 @@ int getEvent(void **pp_kindling_event)
 				return -1;
 			}
 		}
-		if(source == SYSCALL_EXIT){
-			if(threadInfo->m_latency / 1e6 < slow.getLatency()){
+		if(source == SYSCALL_EXIT)
+		{
+			if(int64_t(threadInfo->m_latency) < 0 || threadInfo->m_latency / 1e6 < slow.getLatency())
+			{
 				bool exist = slow.getTidExist(threadInfo->m_tid, &slow_map_mutex);
-				if(exist){
+				if(exist)
+				{
 					slow.erase(threadInfo->m_tid, &slow_map_mutex);
 				}
-				if(event_filters[ev_type][kindling_category] == 0){
+				if(event_filters[ev_type][kindling_category] == 0)
+				{
 					return -1;
 				}
 			}
 		}
-	}else{
-		if(event_filters[ev_type][kindling_category] == 0){
+	}
+	else
+	{
+		if(event_filters[ev_type][kindling_category] == 0)
+		{
 			return -1;
 		}
 	}
 
-	if(printEvent){
+	if(printEvent)
+	{
 		string line;
-		if (formatter->tostring(ev, &line)) {
+		if (formatter->tostring(ev, &line)) 
+		{
 			cout<< line << endl;
 		}
 	}
@@ -477,12 +507,15 @@ int getEvent(void **pp_kindling_event)
 
 	uint16_t userAttNumber = 0;
 	p_kindling_event->slow_syscall = NOT_SLOW_SYSCALL;
-	if(slow_syscall_open && source == SYSCALL_EXIT) {
-		if(threadInfo->m_latency / 1e6 >= slow.getLatency()){
+	if(slow_syscall_open && source == SYSCALL_EXIT) 
+	{
+		if((int64_t)(threadInfo->m_latency) >= 0 && threadInfo->m_latency / 1e6 >= slow.getLatency())
+		{
 			p_kindling_event->slow_syscall = IS_SLOW_SYSCALL;
 		}
 		bool exist = slow.getTidExist(threadInfo->m_tid, &slow_map_mutex);
-		if(exist){
+		if(exist)
+		{
 			slow.erase(threadInfo->m_tid, &slow_map_mutex);
 		}
 	}

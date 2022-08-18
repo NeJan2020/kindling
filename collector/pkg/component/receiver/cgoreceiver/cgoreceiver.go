@@ -237,8 +237,10 @@ func (r *CgoReceiver) sendToNextConsumer(evt *model.KindlingEvent) error {
 	if ce := r.telemetry.Logger.Check(zapcore.DebugLevel, ""); ce != nil {
 		r.telemetry.Logger.Debug(fmt.Sprintf("Receive Event: %+v", evt))
 	}
-
-	analyzers := r.analyzerManager.GetConsumableAnalyzers(evt.Name)
+	var analyzers []analyzerpackage.Analyzer
+	if evt.GetSlowSyscallCode() < 2 {
+		analyzers = r.analyzerManager.GetConsumableAnalyzers(evt.Name)
+	}
 	if evt.GetSlowSyscallCode() > 0 {
 		tmp := r.analyzerManager.GetConsumableAnalyzers(constnames.SlowSyscallEvent)
 		for _, analyzer := range tmp {

@@ -101,16 +101,23 @@ func (a *SlowSyscallAnalyzer) generateSlowSyscall(event *model.KindlingEvent) (*
 		return nil, err
 	}
 
-	tinfo := event.GetCtx().GetThreadInfo()
-	if tinfo == nil {
-		return nil, fmt.Errorf("slow syscall: the threadinfo value is nil %s", event.Name)
+	var latencyTrace *model.Metric
+	if event.GetSlowSyscallCode() == IS_SYSCALL_TIMEOUT {
+		latencyTrace = model.NewIntMetric(constnames.ErrorSlowSyscallTraceName, int64(-200))
+	} else {
+		tinfo := event.GetCtx().GetThreadInfo()
+		if tinfo == nil {
+			return nil, fmt.Errorf("slow syscall: the threadinfo value is nil %s", event.Name)
+		}
+		dataLatency := tinfo.GetLatency()
+		if int64(dataLatency) < 0 {
+			a.telemetry.Logger.Sugar().Info("dataLatency error:", zap.Uint64("unsigned_num", dataLatency), zap.Int64("num", int64(dataLatency)), zap.String("evt", event.GetName()), zap.Int("syscallcode", event.GetSlowSyscallCode()))
+			return nil, nil
+		}
+		latencyTrace = model.NewIntMetric(constnames.ErrorSlowSyscallTraceName, int64(dataLatency))
 	}
 
-	dataLatency := tinfo.GetLatency()
-
-	latencyTrace := model.NewIntMetric(constnames.SlowSyscallTraceName, int64(dataLatency))
-
-	return model.NewDataGroup(constnames.SlowSyscallGroupName, labels, event.Timestamp, latencyTrace), nil
+	return model.NewDataGroup(constnames.ErrorSlowSyscallGroupName, labels, event.Timestamp, latencyTrace), nil
 }
 
 func getHostNameFromEnv() (string, error) {
