@@ -21,7 +21,7 @@ void subEventForGo(char* eventName, char* category, void *params);
 #endif //SYSDIG_CGO_FUNC_H
 struct event_params_for_subscribe {
 	char *name;
-	uint64_t value;
+	char *value;
 };
 struct kindling_event_t_for_go{
 	uint64_t timestamp;

@@ -134,10 +134,9 @@ func (p *AggregateProcessor) Consume(dataGroup *model.DataGroup) error {
 		abnormalDataErr := p.nextConsumer.Consume(dataGroup)
 		return abnormalDataErr
 	case constnames.PgftMetricGroupName:
-		//p.nextConsumer.Consume(dataGroup)
 		p.aggregator.Aggregate(dataGroup, p.pgftLabelSelectors)
 		return nil
-	case constnames.SlowSyscallGroupName:
+	case constnames.ErrorSlowSyscallGroupName:
 		p.nextConsumer.Consume(dataGroup)
 		return nil
 	default:

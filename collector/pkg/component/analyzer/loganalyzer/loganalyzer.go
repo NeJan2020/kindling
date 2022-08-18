@@ -56,5 +56,9 @@ func (a *LogAnalyzer) ConsumableEvents() []string {
 	return []string{analyzer.ConsumeAllEvents}
 }
 
+func (a *LogAnalyzer) SetSubEvents(params map[string]string) {
+
+}
+
 type Config struct {
 }

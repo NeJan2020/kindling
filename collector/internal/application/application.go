@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/errorsyscallanalyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/pgftmetricanalyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/slowsyscallanalyzer"
 
@@ -93,6 +94,7 @@ func (a *Application) registerFactory() {
 	a.componentsFactory.RegisterAnalyzer(pgftmetricanalyzer.PgftMetric.String(), pgftmetricanalyzer.NewPgftMetricAnalyzer, &pgftmetricanalyzer.Config{})
 
 	a.componentsFactory.RegisterAnalyzer(slowsyscallanalyzer.SlowSyscallTrace.String(), slowsyscallanalyzer.NewSlowSyscallAnalyzer, &slowsyscallanalyzer.Config{})
+	a.componentsFactory.RegisterAnalyzer(errorsyscallanalyzer.ErrorSyscallTrace.String(), errorsyscallanalyzer.NewErrorSyscallAnalyzer, &errorsyscallanalyzer.Config{})
 	a.componentsFactory.RegisterAnalyzer(tcpconnectanalyzer.Type.String(), tcpconnectanalyzer.New, tcpconnectanalyzer.NewDefaultConfig())
 	a.componentsFactory.RegisterAnalyzer(tcpstatanalyzer.Tcpstat.String(), tcpstatanalyzer.New, &tcpstatanalyzer.Config{})
 }
@@ -146,6 +148,10 @@ func (a *Application) buildPipeline() error {
 	slowAnalyzerFactory := a.componentsFactory.Analyzers[slowsyscallanalyzer.SlowSyscallTrace.String()]
 	slowAnalyzer := slowAnalyzerFactory.NewFunc(slowAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 
+	//5. error syscall analyzer
+	errorAnalyzerFactory := a.componentsFactory.Analyzers[errorsyscallanalyzer.ErrorSyscallTrace.String()]
+	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+
 	// Initialize receiver packaged with multiple analyzers
 	tcpConnectAnalyzerFactory := a.componentsFactory.Analyzers[tcpconnectanalyzer.Type.String()]
 	tcpConnectAnalyzer := tcpConnectAnalyzerFactory.NewFunc(tcpConnectAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
@@ -153,7 +159,7 @@ func (a *Application) buildPipeline() error {
 	tcpstatAnalyzerFactory := a.componentsFactory.Analyzers[tcpstatanalyzer.Tcpstat.String()]
 	tcpstatAnalyzer := tcpstatAnalyzerFactory.NewFunc(tcpstatAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 	// Initialize receiver packaged with multiple analyzers
-	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer)
+	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer, errorAnalyzer)
 	if err != nil {
 		return fmt.Errorf("error happened while creating analyzer manager: %w", err)
 	}
