@@ -271,32 +271,22 @@ func (r *CgoReceiver) subEvent() error {
 		params := value.Params
 		var paramsList []CEventParamsForSubscribe
 		var ok bool
-		var val uint64
 		if value.Name == "udf-slow_syscall" {
-			var temp CEventParamsForSubscribe
-			val, ok = params["latency"]
+			paramsList, ok = MakeParamsListForSlowSyscall(params)
 			if !ok {
-				return fmt.Errorf("slow syscall sub error: param latency is empty!")
+				return fmt.Errorf("slow syscall sub error: params error!")
 			}
-			temp.name = C.CString("latency")
-			temp.value = C.uint64_t(val)
-			paramsList = append(paramsList, temp)
-
-			val, ok = params["timeout"]
-			if !ok {
-				return fmt.Errorf("slow syscall sub error: param timeout is empty!")
-			}
-			temp.name = C.CString("timeout")
-			temp.value = C.uint64_t(val)
-			paramsList = append(paramsList, temp)
-
 		}
-		if len(paramsList) == 0 {
-			var temp CEventParamsForSubscribe
-			temp.name = C.CString("none")
-			temp.value = C.uint64_t(0)
-			paramsList = append(paramsList, temp)
+		if value.Name == "udf-error_syscall" {
+			paramsList = MakeParamsListForErrorSyscall(params)
+			errorSyscallAnalyzers := r.analyzerManager.GetConsumableAnalyzers("error-syscall")
+			errorSyscallAnalyzers[0].SetSubEvents(params)
+			r.analyzerManager.UpdateAnalyerMap(errorSyscallAnalyzers[0])
 		}
+		var temp CEventParamsForSubscribe
+		temp.name = C.CString("none")
+		temp.value = C.CString("none")
+		paramsList = append(paramsList, temp)
 		C.subEventForGo(C.CString(value.Name), C.CString(value.Category), (unsafe.Pointer)(&paramsList[0]))
 	}
 	return nil

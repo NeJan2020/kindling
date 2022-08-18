@@ -55,6 +55,26 @@ void sub_event(char *eventName, char *category, event_params_for_subscribe param
 		slow_syscall_open = true;
 		cout << "sub slow-syscall with latency=" << params[0].value << ", timeout=" << params[1].value << endl;
 	}
+	if(strcmp(eventName, "udf-error_syscall") == 0)
+	{
+		for(int i=0;;i++)
+		{
+			if(strcmp(params[i].name, "none")==0&&strcmp(params[i].value, "none")==0)
+			{
+				break;
+			}
+			auto it_type = m_events.find(params[i].value);
+			if(it_type != m_events.end())
+			{
+				for(int j = 0; j < 16; j++)
+				{
+					event_filters[it_type->second][j] = 1;
+				}
+				inspector->set_eventmask(it_type->second);
+				inspector->set_eventmask(it_type->second - 1);
+			}
+		}
+	}
 	auto it_type = m_events.find(eventName);
 	if(it_type != m_events.end())
 	{

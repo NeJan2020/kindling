@@ -27,8 +27,12 @@ receivers:
       - name: tracepoint-page_fault
       - name: udf-slow_syscall
         params: 
-          latency: 1
-          timeout: 1000
+          latency: 100
+          timeout: 5000
+      - name: udf-error_syscall
+        params:
+          syscall-1: syscall_exit-access
+          syscall-2: syscall_exit-epoll
 analyzers:
   tcpconnectanalyzer:
     channel_size: 10000

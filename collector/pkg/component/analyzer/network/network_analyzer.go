@@ -721,3 +721,6 @@ func (na *NetworkAnalyzer) getResponseSlowThreshold(protocol string) int {
 	}
 	return na.cfg.getResponseSlowThreshold()
 }
+
+func (na *NetworkAnalyzer) SetSubEvents(params map[string]string) {
+}

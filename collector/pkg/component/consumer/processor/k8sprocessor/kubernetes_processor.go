@@ -84,28 +84,28 @@ func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 		p.processTcpStatsMetric(dataGroup)
 	case constnames.PgftMetricGroupName:
 		p.processPgftMetric(dataGroup)
-	case constnames.SlowSyscallGroupName:
-		p.processSlowSyscallTrace(dataGroup)
+	case constnames.ErrorSlowSyscallGroupName:
+		p.processErrorSlowSyscallTrace(dataGroup)
 	default:
 		p.processNetRequestMetric(dataGroup)
 	}
 	return p.nextConsumer.Consume(dataGroup)
 }
 
-func (p *K8sMetadataProcessor) processSlowSyscallTrace(dataGroup *model.DataGroup) {
-	p.addK8sMetaDataForSlowSyscall(dataGroup)
+func (p *K8sMetadataProcessor) processErrorSlowSyscallTrace(dataGroup *model.DataGroup) {
+	p.addK8sMetaDataForErrorSlowSyscall(dataGroup)
 }
 
-func (p *K8sMetadataProcessor) addK8sMetaDataForSlowSyscall(dataGroup *model.DataGroup) {
+func (p *K8sMetadataProcessor) addK8sMetaDataForErrorSlowSyscall(dataGroup *model.DataGroup) {
 	labelMap := dataGroup.Labels
 	containerId := labelMap.GetStringValue(constlabels.ContainerId)
 	containerInfo, ok := p.metadata.GetByContainerId(containerId)
 	if ok {
-		p.addK8sMetaDataForSlowSyscallLabel(dataGroup.Labels, containerInfo)
+		p.addK8sMetaDataForErrorSlowSyscallLabel(dataGroup.Labels, containerInfo)
 	}
 }
 
-func (p *K8sMetadataProcessor) addK8sMetaDataForSlowSyscallLabel(labelMap *model.AttributeMap, containerInfo *kubernetes.K8sContainerInfo) {
+func (p *K8sMetadataProcessor) addK8sMetaDataForErrorSlowSyscallLabel(labelMap *model.AttributeMap, containerInfo *kubernetes.K8sContainerInfo) {
 	labelMap.UpdateAddStringValue(constlabels.Container, containerInfo.Name)
 	labelMap.UpdateAddStringValue(constlabels.ContainerId, containerInfo.ContainerId)
 	podInfo := containerInfo.RefPodInfo
@@ -117,6 +117,7 @@ func (p *K8sMetadataProcessor) addK8sMetaDataForSlowSyscallLabel(labelMap *model
 	labelMap.UpdateAddStringValue(constlabels.Namespace, podInfo.Namespace)
 	labelMap.UpdateAddStringValue(constlabels.WorkloadKind, podInfo.WorkloadKind)
 	labelMap.UpdateAddStringValue(constlabels.WorkloadName, podInfo.WorkloadName)
+	labelMap.UpdateAddStringValue(constlabels.Node, p.localNodeName)
 }
 
 func (p *K8sMetadataProcessor) processPgftMetric(dataGroup *model.DataGroup) {
