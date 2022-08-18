@@ -2,6 +2,7 @@ package flattenexporter
 
 import (
 	"strconv"
+	"testing"
 
 	"github.com/Kindling-project/kindling/collector/pkg/model"
 	"github.com/Kindling-project/kindling/collector/pkg/model/constlabels"
@@ -194,4 +195,28 @@ func makeTcpMetricDataGroup(i int) *model.DataGroup {
 	MetricsGroup.Labels.AddBoolValue(constlabels.IsServer, false)
 	MetricsGroup.Labels.AddBoolValue(constlabels.Success, false)
 	return MetricsGroup
+}
+func makeSyscallDataGroup(i int) *model.DataGroup {
+	MetricsGroup := &model.DataGroup{
+		Name: constnames.SlowSyscallGroupName,
+		Metrics: []*model.Metric{
+			model.NewIntMetric("kindling_slow_syscall_latency", int64(1000186515)),
+		},
+		Labels:    model.NewAttributeMap(),
+		Timestamp: 19900909090,
+	}
+	MetricsGroup.Labels.AddStringValue("mode", "tcp4")
+	MetricsGroup.Labels.AddStringValue("container", "test-container"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("container_id", "test-container_id"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("namespace", "test-namespace"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("node", "test-node"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("node_ip", "test-node_ip"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("pod", "test-pod"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("service", "test-elasticsearch-svc"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("workload_kind", "test-statefulset"+strconv.Itoa(i))
+	MetricsGroup.Labels.AddStringValue("workload_name", "test-workload_name"+strconv.Itoa(i))
+	return MetricsGroup
+}
+func TestMakeSyscallDataGroup(t *testing.T) {
+	makeSyscallDataGroup(0)
 }
