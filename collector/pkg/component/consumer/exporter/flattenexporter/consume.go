@@ -3,6 +3,7 @@ package flattenexporter
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -57,6 +58,21 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpMetricGroupName:
 	case constnames.ErrorSlowSyscallGroupName:
+		labelsMap := dataGroup.Labels.ToStringMap()
+		for _, v := range labelsMap {
+			if strings.Contains(v, "timeout:") {
+				strArr := strings.Split(v, ":")
+				if len(strArr) > 1 && strArr[0] == "timeout" {
+					v = strArr[2]
+					if ce := e.Telemetry.Logger.Check(zap.DebugLevel, "error_slow_syscall_trace_group: "); ce != nil {
+						ce.Write(
+							zap.String("split_value", v),
+						)
+					}
+				}
+				zap.String("origin_value", v)
+			}
+		}
 		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
