@@ -22,7 +22,7 @@ uint16_t get_kindling_source(uint16_t etype);
 
 struct event_params_for_subscribe {
 	char *name;
-	uint64_t value;
+	char *value;
 };
 struct event {
     string event_name;
