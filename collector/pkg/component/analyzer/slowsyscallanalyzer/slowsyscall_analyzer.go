@@ -64,15 +64,13 @@ func (a *SlowSyscallAnalyzer) ConsumeEvent(event *model.KindlingEvent) error {
 		return nil
 	}
 
-	//a.telemetry.Logger.Sugar().Info("enter the slow syscall analyzer & SlowSyscall code, pid, latency", event.GetSlowSyscallCode(), event.Name, event.GetCtx().GetThreadInfo().GetPid(), event.GetCtx().GetThreadInfo().GetLatency())
-
-	dataGroup, err = a.generateSlowSyscall(event)
 	if event.GetSlowSyscallCode() == IS_SYSCALL_TIMEOUT {
 		strArr := strings.Split(event.Name, ":")
 		if len(strArr) > 1 && strArr[0] == "timeout" {
 			event.Name = strArr[2]
 		}
 	}
+	dataGroup, err = a.generateSlowSyscall(event)
 
 	if err != nil {
 		if ce := a.telemetry.Logger.Check(zapcore.DebugLevel, "Event Skip, "); ce != nil {
@@ -143,6 +141,7 @@ func (a *SlowSyscallAnalyzer) getSlowSyscallLabels(event *model.KindlingEvent) (
 	pid := (int64)(threadinfo.GetPid())
 
 	syscallName := event.GetName()
+
 	containerId := threadinfo.GetContainerId()
 
 	labels.AddStringValue(constlabels.Node, a.localNodeName)
