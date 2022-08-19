@@ -2,6 +2,7 @@ package transform
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/constant"
 	v1 "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/common/v1"
@@ -278,6 +279,12 @@ func GenerateMetricLabels(gaugeGroup *model.DataGroup) []v1.StringKeyValue {
 	metricLabels := make([]v1.StringKeyValue, 0, 25)
 	labelsMap := gaugeGroup.Labels.ToStringMap()
 	for k, v := range labelsMap {
+		if strings.Contains(v, "timeout:") {
+			strArr := strings.Split(v, ":")
+			if len(strArr) > 1 && strArr[0] == "timeout" {
+				v = strArr[2]
+			}
+		}
 		GenerateStringKeyValueSlice(k, v, &metricLabels)
 	}
 	return metricLabels
