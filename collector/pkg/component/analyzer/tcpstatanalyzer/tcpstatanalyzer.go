@@ -99,6 +99,10 @@ func (c *TcpstatAnalyzer) Type() analyzer.Type {
 	return Tcpstat
 }
 
-func (a *TcpstatAnalyzer) ConsumableEvents() []string {
+func (c *TcpstatAnalyzer) ConsumableEvents() []string {
 	return nil
+}
+
+func (c *TcpstatAnalyzer) SetSubEvents(params map[string]string) {
+
 }
