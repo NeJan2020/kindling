@@ -49,8 +49,8 @@ void sub_event(char *eventName, char *category, event_params_for_subscribe param
 	cout << "sub event name: " << eventName << "  &&  category: " << category << endl;
 	if(strcmp(eventName, "udf-slow_syscall") == 0)//subscribe slow syscall
 	{ 
-		slow.setLatency(params[0].value);
-		slow.setTimeout(params[1].value);
+		slow.setLatency(atoi(params[0].value));
+		slow.setTimeout(atoi(params[1].value));
 		slow.subSyscall(inspector, m_events);
 		slow_syscall_open = true;
 		cout << "sub slow-syscall with latency=" << params[0].value << ", timeout=" << params[1].value << endl;
