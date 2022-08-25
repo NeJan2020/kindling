@@ -97,7 +97,7 @@ func (r *CgoReceiver) GetTimeoutSyscall() {
 				r.eventChannel <- event
 				r.stats.add(event.Name, 1)
 			}
-			r.telemetry.Logger.Sugar().Info("total_number_of_timeout_event: ", zap.Int("num", cnt))
+			r.telemetry.Logger.Info("total_number_of_timeout_event: ", zap.Int("num", cnt))
 		}
 	}
 }

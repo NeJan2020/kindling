@@ -3,6 +3,7 @@ package flattenexporter
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/constant"

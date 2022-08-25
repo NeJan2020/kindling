@@ -73,7 +73,7 @@ func (m *Manager) UpdateAnalyerMap(analyzers ...Analyzer) {
 
 func (m *Manager) StartAll(logger *zap.Logger) error {
 	for _, analyzer := range m.allAnalyzers {
-		logger.Infof("Starting analyzer [%s]", analyzer.Type())
+		logger.Sugar().Infof("Starting analyzer [%s]", analyzer.Type())
 		err := analyzer.Start()
 		if err != nil {
 			return err
