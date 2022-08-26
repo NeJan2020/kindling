@@ -526,7 +526,6 @@ int getEvent(void **pp_kindling_event)
 	}
 
 	uint16_t userAttNumber = 0;
-	uint16_t source = get_kindling_source(ev->get_type());
 	if(source == SYSCALL_EXIT) {
 	    uint64_t latency = threadInfo->m_latency;
 		strcpy(p_kindling_event->userAttributes[userAttNumber].key, "latency");
