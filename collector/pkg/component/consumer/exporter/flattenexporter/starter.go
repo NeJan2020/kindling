@@ -2,6 +2,7 @@ package flattenexporter
 
 import (
 	"context"
+
 	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/constant"
 	flattenTraces "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
@@ -64,7 +65,7 @@ func createAndStartBatchProcessor(oce *Cfg, telemetry *component.TelemetryTools)
 		telemetry.Logger.Panic("Cannot createTracesBatchProcessor", zap.String("componentType", Flattten))
 		return nil
 	}
-	tracesBatchErr = tracesBatchProcessor.Start(context.Background(), nil)
+	tracesBatchErr = tracesBatchProcessor.Start(context.Background())
 	if tracesBatchErr != nil {
 		return nil
 	}
@@ -74,7 +75,7 @@ func createAndStartBatchProcessor(oce *Cfg, telemetry *component.TelemetryTools)
 		telemetry.Logger.Panic("Cannot createMetricsBatchProcessor", zap.String("componentType", Flattten))
 		return nil
 	}
-	metricsBatchErr = metricsBatchProcessor.Start(context.Background(), nil)
+	metricsBatchErr = metricsBatchProcessor.Start(context.Background())
 	if metricsBatchErr != nil {
 		return nil
 	}

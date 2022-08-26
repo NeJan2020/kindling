@@ -2,19 +2,20 @@ package flattenexporter
 
 import (
 	"context"
-	flattenTraces "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
-	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/common/v1"
-	flattenMetrics "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/metrics/flatten"
-	internalComponent "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/internal/component"
-	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/internal/consumer"
-	"go.uber.org/zap"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/Kindling-project/kindling/collector/pkg/component"
+	flattenTraces "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/collector/trace/v1"
+	v1 "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/common/v1"
+	flattenMetrics "github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/data/protogen/metrics/flatten"
+	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/internal/consumer"
+	"go.uber.org/zap"
 )
 
 type Processor struct {
-	logger           *zap.Logger
+	logger           *component.TelemetryLogger
 	exportCtx        context.Context
 	timer            *time.Timer
 	timeout          time.Duration
@@ -58,7 +59,7 @@ func (bp *Processor) Capabilities() consumer.Capabilities {
 }
 
 // Start is invoked during service startup.
-func (bp *Processor) Start(context.Context, internalComponent.Host) error {
+func (bp *Processor) Start(context.Context) error {
 	bp.goroutines.Add(1)
 	go bp.startProcessingCycle()
 	return nil

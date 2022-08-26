@@ -3,6 +3,7 @@ package analyzer
 import (
 	"errors"
 
+	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
 )
@@ -81,10 +82,10 @@ func (m *Manager) StartAll(logger *zap.Logger) error {
 	return nil
 }
 
-func (m *Manager) ShutdownAll(logger *zap.Logger) error {
+func (m *Manager) ShutdownAll(logger *component.TelemetryLogger) error {
 	var retErr error = nil
 	for _, analyzer := range m.allAnalyzers {
-		logger.Sugar().Infof("Shutdown analyzer [%s]", analyzer.Type())
+		logger.Infof("Shutdown analyzer [%s]", analyzer.Type())
 		err := analyzer.Shutdown()
 		if err != nil {
 			retErr = multierror.Append(retErr, err)

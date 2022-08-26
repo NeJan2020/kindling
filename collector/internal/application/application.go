@@ -60,7 +60,7 @@ func New() (*Application, error) {
 }
 
 func (a *Application) Run() error {
-	err := a.analyzerManager.StartAll(a.telemetry.Telemetry.Logger)
+	err := a.analyzerManager.StartAll(a.telemetry.GetGlobalTelemetryTools().GetZapLogger())
 	if err != nil {
 		return fmt.Errorf("failed to start application: %v", err)
 	}
@@ -73,7 +73,7 @@ func (a *Application) Run() error {
 }
 
 func (a *Application) Shutdown() error {
-	return multierr.Combine(a.receiver.Shutdown(), a.analyzerManager.ShutdownAll(a.telemetry.Telemetry.Logger))
+	return multierr.Combine(a.receiver.Shutdown(), a.analyzerManager.ShutdownAll(a.telemetry.GetGlobalTelemetryTools().Logger))
 }
 
 func initFlags() error {
@@ -118,46 +118,46 @@ func (a *Application) buildPipeline() error {
 	// TODO: Build pipeline via configuration to implement dependency injection
 	// Initialize exporters
 	flattenExporterFactory := a.componentsFactory.Exporters[flattenexporter.Flattten]
-	flattenExporter := flattenExporterFactory.NewFunc(flattenExporterFactory.Config, a.telemetry.Telemetry)
+	flattenExporter := flattenExporterFactory.NewFunc(flattenExporterFactory.Config, a.telemetry.GetTelemetryTools(flattenexporter.Flattten))
 	//otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
 	//otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
 	// Initialize all processors
 	// 1. DataGroup Aggregator
 	aggregateProcessorFactory := a.componentsFactory.Processors[aggregateprocessor.Type]
-	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, flattenExporter)
+	aggregateProcessor := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.GetTelemetryTools(aggregateprocessor.Type), flattenExporter)
 	// 2. Kubernetes metadata processor
 	k8sProcessorFactory := a.componentsFactory.Processors[k8sprocessor.K8sMetadata]
-	k8sMetadataProcessor := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessor)
+	k8sMetadataProcessor := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.GetTelemetryTools(k8sprocessor.K8sMetadata), aggregateProcessor)
 	// Initialize all analyzers
 	// 1. Common network request analyzer
 	networkAnalyzerFactory := a.componentsFactory.Analyzers[network.Network.String()]
 	// Now NetworkAnalyzer must be initialized before any other analyzers, because it will
 	// use its configuration to initialize the conntracker module which is also used by others.
-	networkAnalyzer := networkAnalyzerFactory.NewFunc(networkAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	networkAnalyzer := networkAnalyzerFactory.NewFunc(networkAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(network.Network.String()), []consumer.Consumer{k8sMetadataProcessor})
 	// 2. Layer 4 TCP events analyzer
-	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.Telemetry, flattenExporter)
-	k8sMetadataProcessor2 := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.Telemetry, aggregateProcessorForTcp)
+	aggregateProcessorForTcp := aggregateProcessorFactory.NewFunc(aggregateProcessorFactory.Config, a.telemetry.GetTelemetryTools(aggregateprocessor.Type), flattenExporter)
+	k8sMetadataProcessor2 := k8sProcessorFactory.NewFunc(k8sProcessorFactory.Config, a.telemetry.GetTelemetryTools(aggregateprocessor.Type), aggregateProcessorForTcp)
 	tcpAnalyzerFactory := a.componentsFactory.Analyzers[tcpmetricanalyzer.TcpMetric.String()]
-	tcpAnalyzer := tcpAnalyzerFactory.NewFunc(tcpAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor2})
+	tcpAnalyzer := tcpAnalyzerFactory.NewFunc(tcpAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(tcpmetricanalyzer.TcpMetric.String()), []consumer.Consumer{k8sMetadataProcessor2})
 
 	//3. Page Fault analyzer
 	pgftAnalyzerFactory := a.componentsFactory.Analyzers[pgftmetricanalyzer.PgftMetric.String()]
-	pgftAnalyzer := pgftAnalyzerFactory.NewFunc(pgftAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	pgftAnalyzer := pgftAnalyzerFactory.NewFunc(pgftAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(pgftmetricanalyzer.PgftMetric.String()), []consumer.Consumer{k8sMetadataProcessor})
 
 	//4. slow syscall analyzer
 	slowAnalyzerFactory := a.componentsFactory.Analyzers[slowsyscallanalyzer.SlowSyscallTrace.String()]
-	slowAnalyzer := slowAnalyzerFactory.NewFunc(slowAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	slowAnalyzer := slowAnalyzerFactory.NewFunc(slowAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(slowsyscallanalyzer.SlowSyscallTrace.String()), []consumer.Consumer{k8sMetadataProcessor})
 
 	//5. error syscall analyzer
 	errorAnalyzerFactory := a.componentsFactory.Analyzers[errorsyscallanalyzer.ErrorSyscallTrace.String()]
-	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(errorsyscallanalyzer.ErrorSyscallTrace.String()), []consumer.Consumer{k8sMetadataProcessor})
 
 	// Initialize receiver packaged with multiple analyzers
 	tcpConnectAnalyzerFactory := a.componentsFactory.Analyzers[tcpconnectanalyzer.Type.String()]
-	tcpConnectAnalyzer := tcpConnectAnalyzerFactory.NewFunc(tcpConnectAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	tcpConnectAnalyzer := tcpConnectAnalyzerFactory.NewFunc(tcpConnectAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(tcpconnectanalyzer.Type.String()), []consumer.Consumer{k8sMetadataProcessor})
 	//  Tcpstat analyzer
 	tcpstatAnalyzerFactory := a.componentsFactory.Analyzers[tcpstatanalyzer.Tcpstat.String()]
-	tcpstatAnalyzer := tcpstatAnalyzerFactory.NewFunc(tcpstatAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	tcpstatAnalyzer := tcpstatAnalyzerFactory.NewFunc(tcpstatAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(tcpstatanalyzer.Tcpstat.String()), []consumer.Consumer{k8sMetadataProcessor})
 	// Initialize receiver packaged with multiple analyzers
 	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer, errorAnalyzer)
 	if err != nil {
@@ -166,7 +166,7 @@ func (a *Application) buildPipeline() error {
 	a.analyzerManager = analyzerManager
 
 	cgoReceiverFactory := a.componentsFactory.Receivers[cgoreceiver.Cgo]
-	cgoReceiver := cgoReceiverFactory.NewFunc(cgoReceiverFactory.Config, a.telemetry.Telemetry, analyzerManager)
+	cgoReceiver := cgoReceiverFactory.NewFunc(cgoReceiverFactory.Config, a.telemetry.GetTelemetryTools(cgoreceiver.Cgo), analyzerManager)
 	a.receiver = cgoReceiver
 	return nil
 }
