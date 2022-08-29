@@ -6,6 +6,7 @@
 #define SYSDIG_CGO_FUNC_H
 #include "kindling.h"
 #ifdef __cplusplus
+// extern "C" {} : tell the compiler to compile the function using the C language definition format
 extern "C" {
 #endif
 void runForGo();

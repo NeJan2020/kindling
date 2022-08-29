@@ -26,6 +26,7 @@ const (
 	SrcService      = "src_service"
 	SrcIp           = "src_ip"
 	SrcPort         = "src_port"
+	ListenPort      = "listen_port"
 	SrcContainerId  = "src_container_id"
 	SrcContainer    = "src_container"
 	DstNode         = "dst_node"

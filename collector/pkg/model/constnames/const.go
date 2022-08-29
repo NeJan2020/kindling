@@ -14,6 +14,7 @@ const (
 	PageFaultEvent   = "page_fault"
 	SlowSyscallEvent = "slow_syscall"
 
+	TcpSynAcceptQueueEvent = "inet_csk_accept"
 	TcpCloseEvent          = "tcp_close"
 	TcpRcvEstablishedEvent = "tcp_rcv_established"
 	TcpDropEvent           = "tcp_drop"
@@ -30,10 +31,11 @@ const (
 	// AggregatedNetRequestMetricGroup stands for the dataGroup after aggregation.
 	AggregatedNetRequestMetricGroup = "aggregated_net_request_metric_group"
 
-	TcpMetricGroupName        = "tcp_metric_metric_group"
-	NodeMetricGroupName       = "node_metric_metric_group"
-	TcpConnectMetricGroupName = "tcp_connect_metric_group"
-	PgftMetricGroupName       = "pgft_metric_metric_group"
-	TcpStatsMetricGroup       = "tcp_stats_metric_group"
-	ErrorSlowSyscallGroupName = "error_slow_syscall_trace_group"
+	TcpMetricGroupName               = "tcp_metric_metric_group"
+	NodeMetricGroupName              = "node_metric_metric_group"
+	TcpConnectMetricGroupName        = "tcp_connect_metric_group"
+	PgftMetricGroupName              = "pgft_metric_metric_group"
+	TcpStatsMetricGroup              = "tcp_stats_metric_group"
+	ErrorSlowSyscallGroupName        = "error_slow_syscall_trace_group"
+	TcpSynAcceptQueueMetricGroupName = "inet_csk_accept_metric_group"
 )

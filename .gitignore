@@ -11,3 +11,7 @@ collector/docker/kindling-falcolib-probe.tar.gz
 
 *.log
 logs
+
+*.ko
+*.o
+kindling-falcolib-probe.tar.gz

@@ -40,6 +40,11 @@ const (
 	TcpConnectTotalMetric     = "kindling_tcp_connect_total"
 	TcpConnectDurationMetric  = "kindling_tcp_connect_duration_nanoseconds_total"
 	ErrorSlowSyscallTraceName = "kindling_error_slow_syscall"
+
+	TcpSynLenMetricName    = "kindling_syn_len"
+	TcpSynMaxMetricName    = "kindling_syn_max"
+	TcpAcceptLenMetricName = "kindling_accept_len"
+	TcpAcceptMaxMetricName = "kindling_accept_max"
 )
 
 const (

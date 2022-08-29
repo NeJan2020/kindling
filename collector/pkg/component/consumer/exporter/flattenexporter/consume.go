@@ -59,6 +59,10 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+	case constnames.TcpSynAcceptQueueMetricGroupName:
+		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	default:
 		err = fmt.Errorf("flatten exporter can't support to export this DataGroup: %s", dataGroup.Name)
 	}

@@ -381,6 +381,7 @@ const static event kindling_to_sysdig[PPM_EVENT_MAX] = {
 	{"tracepoint-tcp_send_reset",       PPME_TCP_SEND_RESET_E},
 	{"tracepoint-tcp_receive_reset",    PPME_TCP_RECEIVE_RESET_E},
 	{"tracepoint-page_fault",           PPME_PAGE_FAULT_E},
+	{"kprobe-inet_csk_accept",          PPME_INET_CSK_ACCEPT_E},
 };
 
 struct event_category {
