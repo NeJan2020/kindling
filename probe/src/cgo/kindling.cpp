@@ -43,7 +43,7 @@ void init_sub_label()
 	}
 }
 
-
+// subscribe choosen event
 void sub_event(char *eventName, char *category, event_params_for_subscribe params[])
 {
 	cout << "sub event name: " << eventName << "  &&  category: " << category << endl;
@@ -144,7 +144,9 @@ void init_probe()
 		try
 		{
 			inspector->open("");
+			// clear all subscription to events
 			inspector->clear_eventmask();
+			// subscribe some events default
 			inspector->set_eventmask(PPME_SYSCALL_WRITEV_X);
 			inspector->set_eventmask(PPME_SYSCALL_WRITEV_X - 1);
 			inspector->set_eventmask(PPME_SYSCALL_WRITE_X);
@@ -343,6 +345,8 @@ int getEvent(void **pp_kindling_event)
 {
 	int32_t res;
 	sinsp_evt *ev;
+
+	// get a event (sinsp_evt**)pointer from agent-libs
 	res = inspector->next(&ev);
 	if(res == SCAP_TIMEOUT)
 	{

@@ -8,6 +8,8 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/pgftmetricanalyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/slowsyscallanalyzer"
 
+	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/synacceptqueueanalyzer"
+
 	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/loganalyzer"
@@ -97,6 +99,7 @@ func (a *Application) registerFactory() {
 	a.componentsFactory.RegisterAnalyzer(errorsyscallanalyzer.ErrorSyscallTrace.String(), errorsyscallanalyzer.NewErrorSyscallAnalyzer, &errorsyscallanalyzer.Config{})
 	a.componentsFactory.RegisterAnalyzer(tcpconnectanalyzer.Type.String(), tcpconnectanalyzer.New, tcpconnectanalyzer.NewDefaultConfig())
 	a.componentsFactory.RegisterAnalyzer(tcpstatanalyzer.Tcpstat.String(), tcpstatanalyzer.New, &tcpstatanalyzer.Config{})
+	a.componentsFactory.RegisterAnalyzer(synacceptqueueanalyzer.SynAcceptQueueMetric.String(), synacceptqueueanalyzer.NewSynAcceptQueueMetricAnalyzer, &synacceptqueueanalyzer.Config{})
 }
 
 func (a *Application) readInConfig(path string) error {
@@ -150,7 +153,11 @@ func (a *Application) buildPipeline() error {
 
 	//5. error syscall analyzer
 	errorAnalyzerFactory := a.componentsFactory.Analyzers[errorsyscallanalyzer.ErrorSyscallTrace.String()]
-	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(errorsyscallanalyzer.ErrorSyscallTrace.String()), []consumer.Consumer{k8sMetadataProcessor})
+	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+
+	//6. tcp syn accept queue analyzer
+	synacceptqueueAnalyzerFactory := a.componentsFactory.Analyzers[synacceptqueueanalyzer.SynAcceptQueueMetric.String()]
+	synacceptqueueAnalyzer := synacceptqueueAnalyzerFactory.NewFunc(synacceptqueueAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
 
 	// Initialize receiver packaged with multiple analyzers
 	tcpConnectAnalyzerFactory := a.componentsFactory.Analyzers[tcpconnectanalyzer.Type.String()]
@@ -159,7 +166,7 @@ func (a *Application) buildPipeline() error {
 	tcpstatAnalyzerFactory := a.componentsFactory.Analyzers[tcpstatanalyzer.Tcpstat.String()]
 	tcpstatAnalyzer := tcpstatAnalyzerFactory.NewFunc(tcpstatAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(tcpstatanalyzer.Tcpstat.String()), []consumer.Consumer{k8sMetadataProcessor})
 	// Initialize receiver packaged with multiple analyzers
-	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer, errorAnalyzer)
+	analyzerManager, err := analyzer.NewManager(networkAnalyzer, tcpAnalyzer, tcpConnectAnalyzer, tcpstatAnalyzer, pgftAnalyzer, slowAnalyzer, errorAnalyzer, synacceptqueueAnalyzer)
 	if err != nil {
 		return fmt.Errorf("error happened while creating analyzer manager: %w", err)
 	}

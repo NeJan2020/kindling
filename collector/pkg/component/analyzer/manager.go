@@ -23,6 +23,7 @@ func NewManager(analyzers ...Analyzer) (*Manager, error) {
 	if len(analyzers) == 0 {
 		return nil, errors.New("no analyzers found, but must provide at least one analyzer")
 	}
+	// map: event name -> Analyzer
 	analyzerMap := make(map[string][]Analyzer)
 	consumeAllEventsAnalyzers := make([]Analyzer, 0)
 	for _, analyzer := range analyzers {

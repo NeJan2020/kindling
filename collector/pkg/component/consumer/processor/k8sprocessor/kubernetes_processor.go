@@ -86,10 +86,40 @@ func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 		p.processPgftMetric(dataGroup)
 	case constnames.ErrorSlowSyscallGroupName:
 		p.processErrorSlowSyscallTrace(dataGroup)
+	case constnames.TcpSynAcceptQueueMetricGroupName:
+		p.processTcpSynAcceptQueueMetric(dataGroup)
 	default:
 		p.processNetRequestMetric(dataGroup)
 	}
 	return p.nextConsumer.Consume(dataGroup)
+}
+
+func (p *K8sMetadataProcessor) processTcpSynAcceptQueueMetric(dataGroup *model.DataGroup) {
+	p.addK8sMetaDataForTcpSynAcceptQueue(dataGroup)
+}
+
+func (p *K8sMetadataProcessor) addK8sMetaDataForTcpSynAcceptQueue(dataGroup *model.DataGroup) {
+	labelMap := dataGroup.Labels
+	containerId := labelMap.GetStringValue(constlabels.ContainerId)
+	containerInfo, ok := p.metadata.GetByContainerId(containerId)
+	if ok {
+		p.addK8sMetaDataForTcpSynAcceptQueueLabel(dataGroup.Labels, containerInfo)
+	}
+}
+
+func (p *K8sMetadataProcessor) addK8sMetaDataForTcpSynAcceptQueueLabel(labelMap *model.AttributeMap, containerInfo *kubernetes.K8sContainerInfo) {
+	labelMap.UpdateAddStringValue(constlabels.Container, containerInfo.Name)
+	labelMap.UpdateAddStringValue(constlabels.ContainerId, containerInfo.ContainerId)
+	podInfo := containerInfo.RefPodInfo
+	labelMap.UpdateAddStringValue(constlabels.Pod, podInfo.PodName)
+	labelMap.UpdateAddStringValue(constlabels.Ip, podInfo.Ip)
+	if containerInfo.RefPodInfo.ServiceInfo != nil {
+		labelMap.UpdateAddStringValue(constlabels.Service, containerInfo.RefPodInfo.ServiceInfo.ServiceName)
+	}
+	labelMap.UpdateAddStringValue(constlabels.Namespace, podInfo.Namespace)
+	labelMap.UpdateAddStringValue(constlabels.WorkloadKind, podInfo.WorkloadKind)
+	labelMap.UpdateAddStringValue(constlabels.WorkloadName, podInfo.WorkloadName)
+	labelMap.UpdateAddStringValue(constlabels.Node, p.localNodeName)
 }
 
 func (p *K8sMetadataProcessor) processErrorSlowSyscallTrace(dataGroup *model.DataGroup) {

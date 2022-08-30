@@ -17,7 +17,16 @@ else
     echo "compiler collector failed! exit!"
   else
     cd docker
-    docker build -t kindling-collector .
-    #docker build -t kindling-collector . -f DockerfileLocalProbe # if build the collector with local probe, please use this command.
+
+    # 1. 
+    # we have prepared some precompiled probes for some kernel version, may not fit your kernel version
+    # if build the collector with precompiled probe, please use this command.
+    # docker build -t kindling-collector .
+
+    # or
+
+    # 2.
+    # if build the collector with your local probe, please use this command.
+    docker build -t kindling-collector . -f DockerfileLocalProbe
   fi
 fi

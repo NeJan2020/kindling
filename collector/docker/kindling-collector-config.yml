@@ -26,6 +26,7 @@ receivers:
       - name: kprobe-tcp_set_state
       - name: tracepoint-page_fault
       - name: udf-slow_syscall
+      - name: kprobe-inet_csk_accept
         params:
           latency: 1
           timeout: 1000
@@ -157,6 +158,10 @@ exporters:
       kindling_tcp_packet_loss_total: counter
       kindling_tcp_connect_total: counter
       kindling_tcp_connect_duration_nanoseconds_total: counter
+      kindling_syn_len: gauge
+      kindling_syn_max: gauge
+      kindling_accept_len: gauge
+      kindling_accept_max: gauge
     # Export data in the following ways: ["prometheus", "otlp", "stdout"]
     # Note: configure the corresponding section to make everything ok
     export_kind: prometheus
