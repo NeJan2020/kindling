@@ -91,8 +91,6 @@ func (a *SynAcceptQueueAnalyzer) generateSynAcceptQueue(event *model.KindlingEve
 		return nil, err
 	}
 
-	// syn_len := event.GetUintUserAttribute("syn_len")
-	// 修复syn_len数据错误bug
 	syn_len := event.GetIntUserAttribute("syn_len")
 	syn_max := event.GetUintUserAttribute("syn_max")
 	accept_len := event.GetUintUserAttribute("accept_len")
