@@ -37,5 +37,6 @@ const (
 	PgftMetricGroupName              = "pgft_metric_metric_group"
 	TcpStatsMetricGroup              = "tcp_stats_metric_group"
 	ErrorSlowSyscallGroupName        = "error_slow_syscall_trace_group"
+	TcpStatusMetricGroup      = "tcp_status_metric_group" //tcp_srtt,tcp_packet_loss,tcp_retransmit
 	TcpSynAcceptQueueMetricGroupName = "inet_csk_accept_metric_group"
 )

@@ -73,6 +73,7 @@ const (
 	MetricTypePageFault = 3
 	MetricTypeTcp       = 4
 	MetricTypeSysCall   = 5
+	MetricTypeTcpStatus = 7
 
 	ContainerName   = "container_name"
 	DnsQueryTime    = "dns_query_time"

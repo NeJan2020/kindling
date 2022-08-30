@@ -49,7 +49,7 @@ func (r *CgoReceiver) Type() string {
 func NewCgoReceiver(config interface{}, telemetry *component.TelemetryTools, analyzerManager *analyzerpackage.Manager) receiver.Receiver {
 	cfg, ok := config.(*Config)
 	if !ok {
-		telemetry.Logger.Sugar().Panicf("Cannot convert [%s] config", Cgo)
+		telemetry.Logger.Panicf("Cannot convert [%s] config", Cgo)
 	}
 	cgoReceiver := &CgoReceiver{
 		cfg:             cfg,
@@ -97,7 +97,7 @@ func (r *CgoReceiver) GetTimeoutSyscall() {
 				r.eventChannel <- event
 				r.stats.add(event.Name, 1)
 			}
-			r.telemetry.Logger.Sugar().Info("total_number_of_timeout_event: ", zap.Int("num", cnt))
+			r.telemetry.Logger.Info("total_number_of_timeout_event: ", zap.Int("num", cnt))
 		}
 	}
 }
@@ -264,7 +264,7 @@ func (r *CgoReceiver) subEvent() error {
 	if len(r.cfg.SubscribeInfo) == 0 {
 		r.telemetry.Logger.Warn("No events are subscribed by cgoreceiver. Please check your configuration.")
 	} else {
-		r.telemetry.Logger.Sugar().Infof("The subscribed events are: %v", r.cfg.SubscribeInfo)
+		r.telemetry.Logger.Infof("The subscribed events are: %v", r.cfg.SubscribeInfo)
 	}
 
 	for _, value := range r.cfg.SubscribeInfo {

@@ -15,7 +15,7 @@ func createTracesExporter(cfg *Cfg) (component.TracesExporter, error) {
 	oCfg := cfg.Config
 	return exporterhelper.NewTracesExporter(
 		oCfg,
-		cfg.Telemetry.Logger,
+		cfg.Telemetry.GetZapLogger(),
 		cfg.pushTraceData,
 		exporterhelper.WithCapabilities(consumer.Capabilities{MutatesData: false}),
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
@@ -27,7 +27,7 @@ func createMetricsExporter(cfg *Cfg) (component.MetricsExporter, error) {
 	oCfg := cfg.Config
 	return exporterhelper.NewMetricsExporter(
 		oCfg,
-		cfg.Telemetry.Logger,
+		cfg.Telemetry.GetZapLogger(),
 		cfg.pushMetricsData,
 		exporterhelper.WithCapabilities(consumer.Capabilities{MutatesData: false}),
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),

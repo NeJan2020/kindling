@@ -25,10 +25,8 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 
 	batchTraceProcessor := (*e.batchProcessors)[constant.Traces]
 	batchMetricProcessor := (*e.batchProcessors)[constant.Metrics]
-	if ce := e.Telemetry.Logger.Check(zap.DebugLevel, "exporter receives a dataGroup111: "); ce != nil {
-		ce.Write(
-			zap.String("dataGroup", dataGroup.String()),
-		)
+	if ce := e.Telemetry.Logger.Check(zap.DebugLevel, ""); ce != nil {
+		e.Telemetry.Logger.Debug("exporter receives a dataGroup: \n" + dataGroup.String())
 	}
 	service := e.Config.GetServiceInstance()
 	var err error
@@ -58,6 +56,10 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 	case constnames.ErrorSlowSyscallGroupName:
 		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
+		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+	case constnames.TcpStatusMetricGroup:
+		tcpStatusMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStatus)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpStatusMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpSynAcceptQueueMetricGroupName:
 		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
