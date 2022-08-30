@@ -72,7 +72,7 @@ func (a *SynAcceptQueueAnalyzer) ConsumeEvent(event *model.KindlingEvent) error 
 		return nil
 	}
 
-	a.telemetry.Logger.Sugar().Infof("[analyzer]SynAcceptQueueDataGroup: %s", dataGroup.String())
+	a.telemetry.Logger.Infof("[analyzer]SynAcceptQueueDataGroup: %s", dataGroup.String())
 
 	var retError error
 	for _, nextConsumer := range a.consumers {

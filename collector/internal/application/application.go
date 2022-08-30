@@ -153,11 +153,11 @@ func (a *Application) buildPipeline() error {
 
 	//5. error syscall analyzer
 	errorAnalyzerFactory := a.componentsFactory.Analyzers[errorsyscallanalyzer.ErrorSyscallTrace.String()]
-	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	errorAnalyzer := errorAnalyzerFactory.NewFunc(errorAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(errorsyscallanalyzer.ErrorSyscallTrace.String()), []consumer.Consumer{k8sMetadataProcessor})
 
 	//6. tcp syn accept queue analyzer
 	synacceptqueueAnalyzerFactory := a.componentsFactory.Analyzers[synacceptqueueanalyzer.SynAcceptQueueMetric.String()]
-	synacceptqueueAnalyzer := synacceptqueueAnalyzerFactory.NewFunc(synacceptqueueAnalyzerFactory.Config, a.telemetry.Telemetry, []consumer.Consumer{k8sMetadataProcessor})
+	synacceptqueueAnalyzer := synacceptqueueAnalyzerFactory.NewFunc(synacceptqueueAnalyzerFactory.Config, a.telemetry.GetTelemetryTools(synacceptqueueanalyzer.SynAcceptQueueMetric.String()), []consumer.Consumer{k8sMetadataProcessor})
 
 	// Initialize receiver packaged with multiple analyzers
 	tcpConnectAnalyzerFactory := a.componentsFactory.Analyzers[tcpconnectanalyzer.Type.String()]

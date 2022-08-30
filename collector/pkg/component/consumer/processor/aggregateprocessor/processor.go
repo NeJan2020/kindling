@@ -140,7 +140,7 @@ func (p *AggregateProcessor) Consume(dataGroup *model.DataGroup) error {
 		p.nextConsumer.Consume(dataGroup)
 		return nil
 	case constnames.TcpSynAcceptQueueMetricGroupName:
-		p.telemetry.Logger.Sugar().Infof("[processor]SynAcceptQueueDataGroup: %s", dataGroup.String())
+		p.telemetry.Logger.Infof("[processor]SynAcceptQueueDataGroup: %s", dataGroup.String())
 		p.nextConsumer.Consume(dataGroup)
 		return nil
 	default:
