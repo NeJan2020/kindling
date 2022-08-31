@@ -42,7 +42,6 @@ func NewSynAcceptQueueMetricAnalyzer(cfg interface{}, telemetry *component.Telem
 }
 
 func (a *SynAcceptQueueAnalyzer) Start() error {
-	a.telemetry.Logger.Sugar().Infof("SynAcceptQueueAnalyzer Start...")
 	return nil
 }
 

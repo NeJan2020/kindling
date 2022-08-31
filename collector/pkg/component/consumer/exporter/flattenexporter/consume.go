@@ -3,6 +3,7 @@ package flattenexporter
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/exporter/flattenexporter/constant"
@@ -62,8 +63,8 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpStatusMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpSynAcceptQueueMetricGroupName:
-		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
-		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
+		tcpBacklogMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpBacklog)
+		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpBacklogMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	default:
 		err = fmt.Errorf("flatten exporter can't support to export this DataGroup: %s", dataGroup.Name)

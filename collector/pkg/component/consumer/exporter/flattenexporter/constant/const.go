@@ -67,13 +67,14 @@ const (
 	Traces  = "traces"
 	Metrics = "metrics"
 
-	MetricTypeRequest   = 0
-	MetricTypeConnect   = 1
-	MetricTypeTcpStats  = 2
-	MetricTypePageFault = 3
-	MetricTypeTcp       = 4
-	MetricTypeSysCall   = 5
-	MetricTypeTcpStatus = 7
+	MetricTypeRequest    = 0
+	MetricTypeConnect    = 1
+	MetricTypeTcpStats   = 2
+	MetricTypePageFault  = 3
+	MetricTypeTcp        = 4
+	MetricTypeSysCall    = 5
+	MetricTypeTcpBacklog = 6
+	MetricTypeTcpStatus  = 7
 
 	ContainerName   = "container_name"
 	DnsQueryTime    = "dns_query_time"
