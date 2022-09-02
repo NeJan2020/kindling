@@ -25,8 +25,8 @@ receivers:
       - name: kretprobe-tcp_connect
       - name: kprobe-tcp_set_state
       - name: tracepoint-page_fault
-      - name: udf-slow_syscall
       - name: kprobe-inet_csk_accept
+      - name: udf-slow_syscall
         params: 
           latency: 100
           timeout: 5000
