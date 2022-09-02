@@ -53,12 +53,11 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		connectMetric := transform.GenerateConnectMetric(dataGroup, constant.MetricTypeConnect)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, connectMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-	case constnames.TcpMetricGroupName:
 	case constnames.ErrorSlowSyscallGroupName:
 		syscallMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeSysCall)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
-	case constnames.TcpStatusMetricGroup:
+	case constnames.TcpMetricGroupName:
 		tcpStatusMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStatus)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpStatusMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
