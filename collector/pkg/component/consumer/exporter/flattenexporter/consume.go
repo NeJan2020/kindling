@@ -58,9 +58,9 @@ func (e *Cfg) Consume(dataGroup *model.DataGroup) error {
 		metricServiceRequest := transform.CreateFlattenMetrics(service, syscallMetric)
 		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpMetricGroupName:
-		tcpStatusMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStatus)
-		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpStatusMetric)
-		err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
+		//tcpStatusMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpStatus)
+		//metricServiceRequest := transform.CreateFlattenMetrics(service, tcpStatusMetric)
+		//err = batchMetricProcessor.ConsumeMetrics(context.Background(), metricServiceRequest)
 	case constnames.TcpSynAcceptQueueMetricGroupName:
 		tcpBacklogMetric := transform.GenerateXXMetric(dataGroup, constant.MetricTypeTcpBacklog)
 		metricServiceRequest := transform.CreateFlattenMetrics(service, tcpBacklogMetric)

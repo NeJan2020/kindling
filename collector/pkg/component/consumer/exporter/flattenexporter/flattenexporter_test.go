@@ -198,7 +198,7 @@ func makeTcpMetricDataGroup(i int) *model.DataGroup {
 }
 func makeSyscallDataGroup(i int) *model.DataGroup {
 	MetricsGroup := &model.DataGroup{
-		Name: constnames.SlowSyscallGroupName,
+		Name: constnames.ErrorSlowSyscallGroupName,
 		Metrics: []*model.Metric{
 			model.NewIntMetric("kindling_slow_syscall_latency", int64(1000186515)),
 		},
