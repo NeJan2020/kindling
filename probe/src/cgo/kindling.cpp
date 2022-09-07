@@ -16,6 +16,7 @@ int pid;
 static sinsp *inspector = nullptr;
 sinsp_evt_formatter *formatter = nullptr;
 bool printEvent = false;
+int MAX_USERATTR_NUM = 8;
 map<string, ppm_event_type> m_events;
 map<string, Category> m_categories;
 unordered_map<int64_t, threadinfo_map_t::ptr_t> threadstable;
@@ -536,8 +537,8 @@ int getEvent(void **pp_kindling_event)
 		memcpy(p_kindling_event->userAttributes[userAttNumber].value, &latency, 8);
 		p_kindling_event->userAttributes[userAttNumber].valueType = UINT64;
 		p_kindling_event->userAttributes[userAttNumber].len = 8;
+		userAttNumber++;
 	}
-	userAttNumber++;
 
 	p_kindling_event->slow_syscall = NOT_SLOW_SYSCALL;
 	if(slow_syscall_open && source == SYSCALL_EXIT) 
@@ -622,9 +623,9 @@ int getEvent(void **pp_kindling_event)
 	default:
 	{
 		uint16_t paramsNumber = ev->get_num_params();
-		if(paramsNumber > 8)
+		if ((paramsNumber + userAttNumber) > MAX_USERATTR_NUM )
 		{
-			paramsNumber = 8;
+			paramsNumber =  MAX_USERATTR_NUM - userAttNumber;
 		}
 		for(auto i = 0; i < paramsNumber; i++)
 		{
