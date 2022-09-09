@@ -123,7 +123,7 @@ func (a *Application) buildPipeline() error {
 	flattenExporterFactory := a.componentsFactory.Exporters[flattenexporter.Flattten]
 	flattenExporter := flattenExporterFactory.NewFunc(flattenExporterFactory.Config, a.telemetry.GetTelemetryTools(flattenexporter.Flattten))
 	//otelExporterFactory := a.componentsFactory.Exporters[otelexporter.Otel]
-	//otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.Telemetry)
+	//otelExporter := otelExporterFactory.NewFunc(otelExporterFactory.Config, a.telemetry.GetTelemetryTools(otelexporter.Otel))
 	// Initialize all processors
 	// 1. DataGroup Aggregator
 	aggregateProcessorFactory := a.componentsFactory.Processors[aggregateprocessor.Type]

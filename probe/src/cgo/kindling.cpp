@@ -533,7 +533,6 @@ int getEvent(void **pp_kindling_event)
 	}
 
 	uint16_t userAttNumber = 0;
-	uint16_t source = get_kindling_source(ev->get_type());
 	if(source == SYSCALL_EXIT) {
 	    uint64_t latency = threadInfo->m_latency;
 		strcpy(p_kindling_event->userAttributes[userAttNumber].key, "latency");
@@ -824,7 +823,6 @@ uint16_t get_kindling_source(uint16_t etype) {
 			case PPME_CONTAINER_JSON_E:
 			case PPME_NOTIFICATION_E:
 			case PPME_INFRASTRUCTURE_EVENT_E:
-			case PPME_SCHEDSWITCH_6_E:
 				return SOURCE_UNKNOWN;
 			case PPME_TCP_RCV_ESTABLISHED_E:
 			case PPME_TCP_CLOSE_E:

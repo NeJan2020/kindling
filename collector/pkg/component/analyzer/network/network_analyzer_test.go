@@ -10,8 +10,6 @@ import (
 
 	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol/factory"
-	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer"
-	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer"
 	"github.com/Kindling-project/kindling/collector/pkg/model"
 	"github.com/spf13/viper"
