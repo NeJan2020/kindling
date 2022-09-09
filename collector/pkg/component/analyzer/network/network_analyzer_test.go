@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Kindling-project/kindling/collector/pkg/component"
+	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol/factory"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer"
 	"github.com/Kindling-project/kindling/collector/pkg/component/analyzer/network/protocol"
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer"
@@ -66,7 +67,7 @@ func (n NopProcessor) Consume(dataGroup *model.DataGroup) error {
 
 var na *NetworkAnalyzer
 
-func prepareNetworkAnalyzer() analyzer.Analyzer {
+func prepareNetworkAnalyzer() *NetworkAnalyzer {
 	if na == nil {
 		config := &Config{}
 		viper := viper.New()
@@ -78,10 +79,14 @@ func prepareNetworkAnalyzer() analyzer.Analyzer {
 		}
 		viper.UnmarshalKey("analyzers.networkanalyzer", config)
 
-		na = NewNetworkAnalyzer(config, component.NewDefaultTelemetryTools(), []consumer.Consumer{&NopProcessor{}}).(*NetworkAnalyzer)
+		na = &NetworkAnalyzer{
+			cfg:           config,
+			dataGroupPool: NewDataGroupPool(),
+			nextConsumers: []consumer.Consumer{&NopProcessor{}},
+			telemetry:     component.NewDefaultTelemetryTools(),
+		}
+		na.parserFactory = factory.NewParserFactory(factory.WithUrlClusteringMethod(na.cfg.UrlClusteringMethod))
 		na.Start()
-
-		na.parsers = append(na.parsers[0:len(na.parsers)-1], na.protocolMap[protocol.DUBBO], na.parsers[len(na.parsers)-1])
 	}
 	return na
 }
@@ -107,7 +112,7 @@ func testProtocol(t *testing.T, eventYaml string, traceYamls ...string) {
 
 		t.Run(trace.Key, func(t *testing.T) {
 			mps := trace.PrepareMessagePairs(eventCommon)
-			result := na.(*NetworkAnalyzer).parseProtocols(mps)
+			result := na.parseProtocols(mps)
 			trace.Validate(t, result)
 		})
 	}
