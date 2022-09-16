@@ -48,6 +48,7 @@ const (
 var initProcessPidPortInfo sync.Once
 
 func NewExporter(config interface{}, telemetry *component.TelemetryTools) exporter.Exporter {
+	telemetry.Logger.Info("Create Flatten Exporter!")
 	oce, err := newCfg(config, telemetry)
 	initProcessPidPortInfo.Do(func() {
 		config := oce.Config
@@ -56,7 +57,8 @@ func NewExporter(config interface{}, telemetry *component.TelemetryTools) export
 		if hostIp == "" {
 			hostIp = "UNKNOW_HOST"
 		}
-		processpid.InitSendPidPortBytime(config.BatchTimeout, config.Endpoint, config.MasterIp, hostIp)
+		telemetry.Logger.Info("FlattenExporter is creating ProcessPid Fetch Task!")
+		processpid.InitSendPidPortBytime(config.BatchTimeout, config.Endpoint, config.MasterIp, hostIp, telemetry)
 	})
 	if err != nil {
 		telemetry.Logger.Panic("Cannot convert Component config", zap.String("componentType", Flattten))

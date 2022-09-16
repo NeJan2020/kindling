@@ -12,7 +12,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Kindling-project/kindling/collector/pkg/component"
 	"github.com/Kindling-project/kindling/collector/pkg/processpid/procs"
+	"go.uber.org/zap"
 )
 
 var AllPidPortMap map[uint16]PortPidMapping
@@ -34,11 +36,12 @@ var client *http.Client
 
 const processPidPortPostPath = "processpidport"
 
-func InitSendPidPortBytime(interval time.Duration, address string, masterIp string, hostIp string) {
+func InitSendPidPortBytime(interval time.Duration, address string, masterIp string, hostIp string, tools *component.TelemetryTools) {
 	endpoint := fmt.Sprintf("%s/%s", address, processPidPortPostPath)
-	go SendPidPortBytime(interval, endpoint, masterIp, hostIp)
+	go SendPidPortBytime(interval, endpoint, masterIp, hostIp, tools)
+	tools.Logger.Info("ProcessPidPort Fetch Start!", zap.Float64("interval(s)", interval.Seconds()), zap.String("endpoint", endpoint), zap.String("masterIp ", masterIp), zap.String("hostIp", hostIp))
 }
-func SendPidPortBytime(interval time.Duration, endpoint string, masterIp string, hostIp string) {
+func SendPidPortBytime(interval time.Duration, endpoint string, masterIp string, hostIp string, tools *component.TelemetryTools) {
 	if interval == 0 {
 		interval = 15 * time.Second
 	}
@@ -50,6 +53,10 @@ func SendPidPortBytime(interval time.Duration, endpoint string, masterIp string,
 		"type":       "processPidPort",
 		"dataMap":    AllPidPortMap,
 		"HostIp":     hostIp,
+	}
+
+	if ce := tools.Logger.Check(zap.DebugLevel, ""); ce != nil {
+		tools.Logger.Debug(fmt.Sprintf("ProcessPidPort: %v\n", AllPidPortMap))
 	}
 
 	PublishAllPidPort(e, endpoint, masterIp)
