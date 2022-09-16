@@ -55,10 +55,6 @@ func SendPidPortBytime(interval time.Duration, endpoint string, masterIp string,
 		"HostIp":     hostIp,
 	}
 
-	if ce := tools.Logger.Check(zap.DebugLevel, ""); ce != nil {
-		tools.Logger.Debug(fmt.Sprintf("ProcessPidPort: %v\n", AllPidPortMap))
-	}
-
 	PublishAllPidPort(e, endpoint, masterIp)
 	procs.Pids = procs.Pids[0:0]
 	ticker := time.NewTicker(interval)

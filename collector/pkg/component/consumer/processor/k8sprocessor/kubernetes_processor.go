@@ -72,6 +72,11 @@ func NewKubernetesProcessor(cfg interface{}, telemetry *component.TelemetryTools
 
 func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 	if !p.config.Enable {
+		name := dataGroup.Name
+		switch name {
+		case constnames.NetRequestMetricGroupName:
+			p.FillExternalNamespaceWhenDisableK8s(dataGroup)
+		}
 		return p.nextConsumer.Consume(dataGroup)
 	}
 	name := dataGroup.Name
@@ -92,6 +97,11 @@ func (p *K8sMetadataProcessor) Consume(dataGroup *model.DataGroup) error {
 		p.processNetRequestMetric(dataGroup)
 	}
 	return p.nextConsumer.Consume(dataGroup)
+}
+
+func (p *K8sMetadataProcessor) FillExternalNamespaceWhenDisableK8s(dataGroup *model.DataGroup) {
+	dataGroup.Labels.UpdateAddStringValue(constlabels.SrcNamespace, constlabels.ExternalClusterNamespace)
+	dataGroup.Labels.UpdateAddStringValue(constlabels.DstNamespace, constlabels.ExternalClusterNamespace)
 }
 
 func (p *K8sMetadataProcessor) processTcpSynAcceptQueueMetric(dataGroup *model.DataGroup) {
