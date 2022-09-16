@@ -90,7 +90,7 @@ func (c *TcpstatAnalyzer) ConsumeEvent(event *model.KindlingEvent) error {
 
 // Shutdown cleans all the resources used by the analyzer
 func (c *TcpstatAnalyzer) Shutdown() error {
-	c.close <- true
+	// c.close <- true
 	return nil
 }
 
