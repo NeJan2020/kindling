@@ -30,7 +30,7 @@ func NewParserFactory(options ...Option) *ParserFactory {
 	for _, option := range options {
 		option(factory.config)
 	}
-	factory.protocolParsers[protocol.HTTP] = http.NewHttpParser(factory.config.urlClusteringMethod)
+	factory.protocolParsers[protocol.HTTP] = http.NewHttpParser(factory.config.urlClusteringMethod, factory.config.extractHost)
 	factory.protocolParsers[protocol.KAFKA] = kafka.NewKafkaParser()
 	factory.protocolParsers[protocol.MYSQL] = mysql.NewMysqlParser()
 	factory.protocolParsers[protocol.REDIS] = redis.NewRedisParser()

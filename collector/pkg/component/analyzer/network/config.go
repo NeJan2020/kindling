@@ -21,6 +21,22 @@ type Config struct {
 	ProtocolParser        []string         `mapstructure:"protocol_parser"`
 	ProtocolConfigs       []ProtocolConfig `mapstructure:"protocol_config,omitempty"`
 	UrlClusteringMethod   string           `mapstructure:"url_clustering_method"`
+	// Only http Request Now
+	ReplaceSrcIpByHostConfig *ReplaceSrcIpByHostConfig `mapstructure:"replace_src_ip_by_host"`
+}
+
+const (
+	ReplaceNone     ReplacePolicy = "none"
+	ReplaceSelected ReplacePolicy = "selected"
+	ReplaceAll      ReplacePolicy = "all"
+)
+
+type ReplacePolicy string
+
+type ReplaceSrcIpByHostConfig struct {
+	ReplacePolicy        ReplacePolicy `mapstructure:"replace_policy"`
+	SrcIpNeedReplaced    []string      `mapstructure:"src_ip_need_replaced"`
+	srcIpNeedReplacedMap map[string]struct{}
 }
 
 func NewDefaultConfig() *Config {

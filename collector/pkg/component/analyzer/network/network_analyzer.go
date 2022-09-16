@@ -3,6 +3,8 @@ package network
 import (
 	"context"
 	"math/rand"
+	"regexp"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,6 +32,8 @@ const (
 
 	Network analyzer.Type = "networkanalyzer"
 )
+
+var IpRegexp, _ = regexp.Compile(`^\d+\.\d+\.\d+\.\d+$`)
 
 type NetworkAnalyzer struct {
 	cfg           *Config
@@ -69,8 +73,24 @@ func NewNetworkAnalyzer(cfg interface{}, telemetry *component.TelemetryTools, co
 		}
 		na.conntracker, _ = conntracker2.NewConntracker(connConfig)
 	}
+	if config.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceNone {
+		na.parserFactory = factory.NewParserFactory(
+			factory.WithUrlClusteringMethod(na.cfg.UrlClusteringMethod),
+			factory.WithExtractHost(true),
+		)
+	} else {
+		na.parserFactory = factory.NewParserFactory(
+			factory.WithUrlClusteringMethod(na.cfg.UrlClusteringMethod),
+			factory.WithExtractHost(false),
+		)
+	}
 
-	na.parserFactory = factory.NewParserFactory(factory.WithUrlClusteringMethod(na.cfg.UrlClusteringMethod))
+	if config.ReplaceSrcIpByHostConfig.ReplacePolicy == ReplaceSelected {
+		for _, ip := range config.ReplaceSrcIpByHostConfig.SrcIpNeedReplaced {
+			na.cfg.ReplaceSrcIpByHostConfig.srcIpNeedReplacedMap[ip] = struct{}{}
+		}
+	}
+
 	return na
 }
 
@@ -354,7 +374,38 @@ func (na *NetworkAnalyzer) distributeTraceMetric(oldPairs *messagePairs, newPair
 	// Case 2 Request 498   Connect/Request                         Request
 	// Case 3 Normal             Connect/Request/Response   Request/Response
 	records := na.parseProtocols(oldPairs)
+
+	if na.cfg.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceAll {
+		na.ReplaceSrcIpByHost(records)
+	} else {
+		for i := 0; i < len(records); i++ {
+			records[i].Labels.RemoveAttribute(constlabels.HttpHost)
+		}
+	}
+
 	return na.distributeDataGroups(records)
+}
+
+func (na *NetworkAnalyzer) ReplaceSrcIpByHost(records []*model.DataGroup) {
+	for i := 0; i < len(records); i++ {
+		record := records[i]
+		host := record.Labels.GetStringValue(constlabels.HttpHost)
+		var hostIp string
+		if host != "" {
+			hostInfos := strings.SplitN(host, ":", 2)
+			if len(hostInfos) > 0 && IpRegexp.MatchString(hostInfos[0]) {
+				hostIp = hostInfos[0]
+			}
+		}
+		switch na.cfg.ReplaceSrcIpByHostConfig.ReplacePolicy {
+		case ReplaceAll:
+			record.Labels.UpdateAddStringValue(constlabels.SrcIp, hostIp)
+		case ReplaceSelected:
+			if _, ok := na.cfg.ReplaceSrcIpByHostConfig.srcIpNeedReplacedMap[hostIp]; ok {
+				record.Labels.UpdateAddStringValue(constlabels.SrcIp, hostIp)
+			}
+		}
+	}
 }
 
 func (na *NetworkAnalyzer) parseRpcAndDistributeTraceMetric(pairs []*rpcPair) error {
