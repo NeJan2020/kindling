@@ -73,7 +73,15 @@ func NewNetworkAnalyzer(cfg interface{}, telemetry *component.TelemetryTools, co
 		}
 		na.conntracker, _ = conntracker2.NewConntracker(connConfig)
 	}
-	if config.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceNone {
+	if config.ReplaceSrcIpByHostConfig != nil {
+		if config.ReplaceSrcIpByHostConfig.ReplacePolicy == ReplaceAll {
+			telemetry.Logger.Infof("Net Analyzer Started with Special Network Policy:\tReplaceSrcIpByHost Config, ReplacePolicy: %s", config.ReplaceSrcIpByHostConfig.ReplacePolicy)
+		} else if config.ReplaceSrcIpByHostConfig.ReplacePolicy == ReplaceSelected {
+			telemetry.Logger.Infof("Net Analyzer Started with Special Network Policy:\tReplaceSrcIpByHost Config, ReplacePolicy: %s \nSelectedHostNeedToReplaced: %v", config.ReplaceSrcIpByHostConfig.ReplacePolicy, config.ReplaceSrcIpByHostConfig.SrcIpNeedReplaced)
+		}
+	}
+
+	if config.ReplaceSrcIpByHostConfig != nil && config.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceNone {
 		na.parserFactory = factory.NewParserFactory(
 			factory.WithUrlClusteringMethod(na.cfg.UrlClusteringMethod),
 			factory.WithExtractHost(true),
@@ -375,11 +383,11 @@ func (na *NetworkAnalyzer) distributeTraceMetric(oldPairs *messagePairs, newPair
 	// Case 3 Normal             Connect/Request/Response   Request/Response
 	records := na.parseProtocols(oldPairs)
 
-	if na.cfg.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceAll {
+	if na.cfg.ReplaceSrcIpByHostConfig.ReplacePolicy != ReplaceNone {
 		na.ReplaceSrcIpByHost(records)
 	} else {
 		for i := 0; i < len(records); i++ {
-			records[i].Labels.RemoveAttribute(constlabels.HttpHost)
+			records[i].Labels.RemoveAttribute(constlabels.ExtractHost)
 		}
 	}
 
@@ -389,12 +397,19 @@ func (na *NetworkAnalyzer) distributeTraceMetric(oldPairs *messagePairs, newPair
 func (na *NetworkAnalyzer) ReplaceSrcIpByHost(records []*model.DataGroup) {
 	for i := 0; i < len(records); i++ {
 		record := records[i]
-		host := record.Labels.GetStringValue(constlabels.HttpHost)
+		//Only request captured by Server need this logic
+		if !record.Labels.GetBoolValue(constlabels.IsServer) {
+			return
+		}
+		host := record.Labels.GetStringValue(constlabels.ExtractHost)
 		var hostIp string
 		if host != "" {
+			defer record.Labels.RemoveAttribute(constlabels.ExtractHost)
 			hostInfos := strings.SplitN(host, ":", 2)
 			if len(hostInfos) > 0 && IpRegexp.MatchString(hostInfos[0]) {
 				hostIp = hostInfos[0]
+			} else {
+				return
 			}
 		}
 		switch na.cfg.ReplaceSrcIpByHostConfig.ReplacePolicy {

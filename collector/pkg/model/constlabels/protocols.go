@@ -11,7 +11,7 @@ const (
 	HttpResponsePayload = "response_payload"
 	HttpStatusCode      = "http_status_code"
 
-	HttpHost = "host"
+	ExtractHost = "extract_host"
 
 	DnsDomain = "dns_domain"
 	DnsRcode  = "dns_rcode"

@@ -53,7 +53,9 @@ func parseHttpRequest(urlClusteringMethod urlclustering.ClusteringMethod, extrac
 		}
 
 		if extractHost {
-			message.AddStringAttribute(constlabels.HttpHost, headers["host"])
+			if host, ok := headers["host"]; ok {
+				message.AddStringAttribute(constlabels.ExtractHost, host)
+			}
 		}
 
 		message.AddStringAttribute(constlabels.HttpMethod, string(method))
