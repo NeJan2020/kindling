@@ -7,7 +7,7 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/urlclustering"
 )
 
-func NewHttpParser(urlClusteringMethod string) *protocol.ProtocolParser {
+func NewHttpParser(urlClusteringMethod string, extractHost bool) *protocol.ProtocolParser {
 	var method urlclustering.ClusteringMethod
 	switch urlClusteringMethod {
 	case "alphabet":
@@ -17,7 +17,7 @@ func NewHttpParser(urlClusteringMethod string) *protocol.ProtocolParser {
 	default:
 		method = urlclustering.NewAlphabeticalClusteringMethod()
 	}
-	requestParser := protocol.CreatePkgParser(fastfailHttpRequest(), parseHttpRequest(method))
+	requestParser := protocol.CreatePkgParser(fastfailHttpRequest(), parseHttpRequest(method, extractHost))
 	responseParser := protocol.CreatePkgParser(fastfailHttpResponse(), parseHttpResponse())
 
 	return protocol.NewProtocolParser(protocol.HTTP, requestParser, responseParser, nil)

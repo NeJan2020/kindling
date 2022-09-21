@@ -99,7 +99,7 @@ func TestParseHttpRequest_GetPayLoad(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			protocol.SetPayLoadLength(protocol.HTTP, tt.size)
 			message := protocol.NewRequestMessage([]byte(httpData))
-			NewHttpParser("").ParseRequest(message)
+			NewHttpParser("", false).ParseRequest(message)
 
 			if !message.HasAttribute(constlabels.HttpRequestPayload) {
 				t.Errorf("Fail to parse HttpRequest()")
@@ -128,7 +128,7 @@ func TestParseHttpResponse_GetPayLoad(t *testing.T) {
 			protocol.SetPayLoadLength(protocol.HTTP, tt.size)
 
 			message := protocol.NewResponseMessage([]byte(httpData), model.NewAttributeMap())
-			NewHttpParser("").ParseResponse(message)
+			NewHttpParser("", false).ParseResponse(message)
 
 			if !message.HasAttribute(constlabels.HttpResponsePayload) {
 				t.Errorf("Fail to parse HttpResponse()")

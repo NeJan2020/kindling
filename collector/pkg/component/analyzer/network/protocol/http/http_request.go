@@ -27,7 +27,7 @@ Request line
 Request header
 Request body
 */
-func parseHttpRequest(urlClusteringMethod urlclustering.ClusteringMethod) protocol.ParsePkgFn {
+func parseHttpRequest(urlClusteringMethod urlclustering.ClusteringMethod, extractHost bool) protocol.ParsePkgFn {
 	return func(message *protocol.PayloadMessage) (bool, bool) {
 		offset, method := message.ReadUntilBlankWithLength(message.Offset, 8)
 
@@ -50,6 +50,12 @@ func parseHttpRequest(urlClusteringMethod urlclustering.ClusteringMethod) protoc
 		if len(traceType) > 0 && len(traceId) > 0 {
 			message.AddStringAttribute(constlabels.HttpApmTraceType, traceType)
 			message.AddStringAttribute(constlabels.HttpApmTraceId, traceId)
+		}
+
+		if extractHost {
+			if host, ok := headers["host"]; ok {
+				message.AddStringAttribute(constlabels.ExtractHost, host)
+			}
 		}
 
 		message.AddStringAttribute(constlabels.HttpMethod, string(method))
