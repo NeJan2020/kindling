@@ -227,6 +227,7 @@ func onAdd(obj interface{}) {
 					cachePodInfo.HostPorts = append(cachePodInfo.HostPorts, port.HostPort)
 					MetaDataCache.AddContainerByHostIpPort(pod.Status.HostIP, uint32(port.HostPort), containerInfo)
 				}
+				MetaDataCache.AddContainerByIpPort(pod.Status.PodIP, uint32(port.ContainerPort), containerInfo)
 			}
 		}
 	}
