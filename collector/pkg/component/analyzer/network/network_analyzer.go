@@ -391,6 +391,20 @@ func (na *NetworkAnalyzer) distributeTraceMetric(oldPairs *messagePairs, newPair
 		}
 	}
 
+	// Remove Bad Match Records.
+	for i := 0; i < len(records); i++ {
+		if duration, ok := records[i].GetMetric(constvalues.RequestTotalTime); ok {
+			if duration.GetInt().Value < 0 {
+				return nil
+			}
+		}
+		if watingTime, ok := records[i].GetMetric(constvalues.WaitingTtfbTime); ok {
+			if watingTime.GetInt().Value < 0 {
+				return nil
+			}
+		}
+	}
+
 	return na.distributeDataGroups(records)
 }
 
