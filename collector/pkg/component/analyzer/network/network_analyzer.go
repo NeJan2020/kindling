@@ -399,7 +399,7 @@ func (na *NetworkAnalyzer) distributeTraceMetric(oldPairs *messagePairs, newPair
 			}
 		}
 		if watingTime, ok := records[i].GetMetric(constvalues.WaitingTtfbTime); ok {
-			if watingTime.GetInt().Value < 0 {
+			if watingTime.GetInt().Value < -1 {
 				return nil
 			}
 		}
