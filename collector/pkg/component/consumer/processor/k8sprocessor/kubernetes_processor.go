@@ -8,6 +8,7 @@ import (
 	"github.com/Kindling-project/kindling/collector/pkg/component/consumer/processor"
 	"github.com/Kindling-project/kindling/collector/pkg/env"
 	"github.com/Kindling-project/kindling/collector/pkg/metadata/kubernetes"
+	metadataclient "github.com/Kindling-project/kindling/collector/pkg/metadata/metaprovider/client"
 	"github.com/Kindling-project/kindling/collector/pkg/model"
 	"github.com/Kindling-project/kindling/collector/pkg/model/constlabels"
 	"github.com/Kindling-project/kindling/collector/pkg/model/constnames"
@@ -47,6 +48,10 @@ func NewKubernetesProcessor(cfg interface{}, telemetry *component.TelemetryTools
 	options = append(options, kubernetes.WithKubeConfigDir(config.KubeConfigDir))
 	options = append(options, kubernetes.WithGraceDeletePeriod(config.GraceDeletePeriod))
 	options = append(options, kubernetes.WithDSFConfig(config.DSFConfig))
+	if config.MetaDataProviderConfig.Enable {
+		cli := metadataclient.NewMetaDataWrapperClient(config.MetaDataProviderConfig.Endpoint)
+		options = append(options, kubernetes.WithMetaDataProviderConfig(config.MetaDataProviderConfig, cli.ListAndWatch))
+	}
 	err := kubernetes.InitK8sHandler(options...)
 	if err != nil {
 		telemetry.Logger.Panicf("Failed to initialize [%s]: %v. Set the option 'enable' false if you want to run the agent in the non-Kubernetes environment.", K8sMetadata, err)

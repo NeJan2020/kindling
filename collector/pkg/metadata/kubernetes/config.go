@@ -1,6 +1,10 @@
 package kubernetes
 
-import "time"
+import (
+	"time"
+
+	"k8s.io/client-go/tools/cache"
+)
 
 // config contains optional settings for connecting to kubernetes.
 type config struct {
@@ -13,6 +17,20 @@ type config struct {
 
 	// DSFRule
 	DSFConfig *DSFConfig `mapstructure:"dsf_config"`
+
+	MetaDataProviderConfig *MetaDataProviderConfig `mapstructure:"metadata_provider_config"`
+
+	listAndWatchFromProvider func() error
+
+	podEventHander     cache.ResourceEventHandler
+	rsEventHander      cache.ResourceEventHandler
+	nodeEventHander    cache.ResourceEventHandler
+	serviceEventHander cache.ResourceEventHandler
+}
+
+type MetaDataProviderConfig struct {
+	Enable   bool   `mapstructure:"enable"`
+	Endpoint string `mapstructure:"endpoint"`
 }
 
 type DSFConfig struct {
@@ -51,6 +69,45 @@ func WithGraceDeletePeriod(interval int) Option {
 
 func WithDSFConfig(dsfCfg *DSFConfig) Option {
 	return func(cfg *config) {
-		cfg.DSFConfig = dsfCfg
+		cfg.DSFConfig.Enable = dsfCfg.Enable
+		cfg.DSFConfig.ConfigServerAddr = dsfCfg.ConfigServerAddr
+		cfg.DSFConfig.SyncInterval = dsfCfg.SyncInterval
+		if dsfCfg.InitEndpoint != "" {
+			cfg.DSFConfig.InitEndpoint = dsfCfg.InitEndpoint
+		}
+		if dsfCfg.UpdateEndpoint != "" {
+			cfg.DSFConfig.UpdateEndpoint = dsfCfg.UpdateEndpoint
+		}
+	}
+}
+
+func WithMetaDataProviderConfig(mpCfg *MetaDataProviderConfig, listAndWatch func() error) Option {
+	return func(cfg *config) {
+		cfg.MetaDataProviderConfig = mpCfg
+		cfg.listAndWatchFromProvider = listAndWatch
+	}
+}
+
+func WithPodEventHander(handler cache.ResourceEventHandler) Option {
+	return func(cfg *config) {
+		cfg.podEventHander = handler
+	}
+}
+
+func WithServiceEventHander(handler cache.ResourceEventHandler) Option {
+	return func(cfg *config) {
+		cfg.serviceEventHander = handler
+	}
+}
+
+func WithNodeEventHander(handler cache.ResourceEventHandler) Option {
+	return func(cfg *config) {
+		cfg.nodeEventHander = handler
+	}
+}
+
+func WithReplicaSetEventHander(handler cache.ResourceEventHandler) Option {
+	return func(cfg *config) {
+		cfg.rsEventHander = handler
 	}
 }

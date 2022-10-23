@@ -19,6 +19,8 @@ type Config struct {
 
 	// DSFRule
 	DSFConfig *kubernetes.DSFConfig `mapstructure:"dsf_config"`
+
+	MetaDataProviderConfig *kubernetes.MetaDataProviderConfig `mapstructure:"metadata_provider_config"`
 }
 
 var DefaultConfig Config = Config{
@@ -32,5 +34,9 @@ var DefaultConfig Config = Config{
 		UpdateEndpoint: "/hcmine/config/dsfUpdate",
 		SyncInterval:   5 * time.Second,
 		EnableDebug:    false,
+	},
+	MetaDataProviderConfig: &kubernetes.MetaDataProviderConfig{
+		Enable:   false,
+		Endpoint: "http://localhost:9504/listAndWatch",
 	},
 }

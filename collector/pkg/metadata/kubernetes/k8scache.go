@@ -55,7 +55,7 @@ func (s *K8sServiceInfo) emptySelf() {
 
 type K8sMetaDataCache struct {
 	cMut            sync.RWMutex
-	containerIdInfo map[string]*K8sContainerInfo
+	ContainerIdInfo map[string]*K8sContainerInfo
 	//
 	//    "192.168.1.14": { // podIp
 	//        9093: k8sResInfo,
@@ -70,21 +70,21 @@ type K8sMetaDataCache struct {
 	//    }
 	//}
 	pMut            sync.RWMutex
-	ipContainerInfo map[string]map[uint32]*K8sContainerInfo
+	IpContainerInfo map[string]map[uint32]*K8sContainerInfo
 
 	sMut          sync.RWMutex
-	ipServiceInfo map[string]map[uint32]*K8sServiceInfo
+	IpServiceInfo map[string]map[uint32]*K8sServiceInfo
 
-	hostPortInfo *HostPortMap
+	HostPortInfo *HostPortMap
 	dsfRuleInfo  *DSFRuleMap
 }
 
 func New() *K8sMetaDataCache {
 	c := &K8sMetaDataCache{
-		containerIdInfo: make(map[string]*K8sContainerInfo),
-		ipContainerInfo: make(map[string]map[uint32]*K8sContainerInfo),
-		ipServiceInfo:   make(map[string]map[uint32]*K8sServiceInfo),
-		hostPortInfo:    newHostPortMap(),
+		ContainerIdInfo: make(map[string]*K8sContainerInfo),
+		IpContainerInfo: make(map[string]map[uint32]*K8sContainerInfo),
+		IpServiceInfo:   make(map[string]map[uint32]*K8sServiceInfo),
+		HostPortInfo:    NewHostPortMap(),
 		dsfRuleInfo:     newDSFRuleMap(),
 	}
 
@@ -93,13 +93,13 @@ func New() *K8sMetaDataCache {
 
 func (c *K8sMetaDataCache) AddByContainerId(containerId string, resource *K8sContainerInfo) {
 	c.cMut.Lock()
-	c.containerIdInfo[containerId] = resource
+	c.ContainerIdInfo[containerId] = resource
 	c.cMut.Unlock()
 }
 
 func (c *K8sMetaDataCache) GetByContainerId(containerId string) (*K8sContainerInfo, bool) {
 	c.cMut.RLock()
-	res, ok := c.containerIdInfo[containerId]
+	res, ok := c.ContainerIdInfo[containerId]
 	c.cMut.RUnlock()
 	if ok {
 		return res, ok
@@ -109,7 +109,7 @@ func (c *K8sMetaDataCache) GetByContainerId(containerId string) (*K8sContainerIn
 
 func (c *K8sMetaDataCache) GetPodByContainerId(containerId string) (*K8sPodInfo, bool) {
 	c.cMut.RLock()
-	containerInfo, ok := c.containerIdInfo[containerId]
+	containerInfo, ok := c.ContainerIdInfo[containerId]
 	c.cMut.RUnlock()
 	if ok {
 		return containerInfo.RefPodInfo, ok
@@ -119,13 +119,13 @@ func (c *K8sMetaDataCache) GetPodByContainerId(containerId string) (*K8sPodInfo,
 
 func (c *K8sMetaDataCache) DeleteByContainerId(containerId string) {
 	c.cMut.Lock()
-	delete(c.containerIdInfo, containerId)
+	delete(c.ContainerIdInfo, containerId)
 	c.cMut.Unlock()
 }
 
 func (c *K8sMetaDataCache) AddContainerByIpPort(ip string, port uint32, resource *K8sContainerInfo) {
 	c.pMut.RLock()
-	portContainerInfo, ok := c.ipContainerInfo[ip]
+	portContainerInfo, ok := c.IpContainerInfo[ip]
 	c.pMut.RUnlock()
 	if ok {
 		c.pMut.Lock()
@@ -135,14 +135,14 @@ func (c *K8sMetaDataCache) AddContainerByIpPort(ip string, port uint32, resource
 		portContainerInfo = make(map[uint32]*K8sContainerInfo)
 		portContainerInfo[port] = resource
 		c.pMut.Lock()
-		c.ipContainerInfo[ip] = portContainerInfo
+		c.IpContainerInfo[ip] = portContainerInfo
 		c.pMut.Unlock()
 	}
 }
 
 func (c *K8sMetaDataCache) GetContainerByIpPort(ip string, port uint32) (*K8sContainerInfo, bool) {
 	c.pMut.RLock()
-	portContainerInfo, ok := c.ipContainerInfo[ip]
+	portContainerInfo, ok := c.IpContainerInfo[ip]
 	defer c.pMut.RUnlock()
 	if !ok {
 		return nil, false
@@ -179,7 +179,7 @@ func (c *K8sMetaDataCache) GetPodByIpPort(ip string, port uint32) (*K8sPodInfo, 
 
 func (c *K8sMetaDataCache) GetPodByIp(ip string) (*K8sPodInfo, bool) {
 	c.pMut.RLock()
-	portContainerInfo, ok := c.ipContainerInfo[ip]
+	portContainerInfo, ok := c.IpContainerInfo[ip]
 	defer c.pMut.RUnlock()
 	if !ok {
 		return nil, false
@@ -195,7 +195,7 @@ func (c *K8sMetaDataCache) GetPodByIp(ip string) (*K8sPodInfo, bool) {
 
 func (c *K8sMetaDataCache) DeleteContainerByIpPort(ip string, port uint32) {
 	c.pMut.RLock()
-	portContainerInfo, ok := c.ipContainerInfo[ip]
+	portContainerInfo, ok := c.IpContainerInfo[ip]
 	c.pMut.RUnlock()
 	if !ok {
 		return
@@ -203,13 +203,13 @@ func (c *K8sMetaDataCache) DeleteContainerByIpPort(ip string, port uint32) {
 	c.pMut.Lock()
 	delete(portContainerInfo, port)
 	if len(portContainerInfo) == 0 {
-		delete(c.ipContainerInfo, ip)
+		delete(c.IpContainerInfo, ip)
 	}
 	c.pMut.Unlock()
 }
 
 func (c *K8sMetaDataCache) AddContainerByHostIpPort(hostIp string, hostPort uint32, containerInfo *K8sContainerInfo) {
-	c.hostPortInfo.add(hostIp, hostPort, containerInfo)
+	c.HostPortInfo.add(hostIp, hostPort, containerInfo)
 }
 
 func (c *K8sMetaDataCache) AddDSFRuleByContainerPorts(ports []corev1.ContainerPort, portMap PortMap, containerRef *K8sContainerInfo) error {
@@ -237,16 +237,16 @@ func (c *K8sMetaDataCache) SearchLocalPublicPortByPodIpAndPrivatePort(privatePor
 }
 
 func (c *K8sMetaDataCache) GetContainerByHostIpPort(hostIp string, hostPort uint32) (*K8sContainerInfo, bool) {
-	return c.hostPortInfo.get(hostIp, hostPort)
+	return c.HostPortInfo.get(hostIp, hostPort)
 }
 
 func (c *K8sMetaDataCache) DeleteContainerByHostIpPort(hostIp string, hostPort uint32) {
-	c.hostPortInfo.delete(hostIp, hostPort)
+	c.HostPortInfo.delete(hostIp, hostPort)
 }
 
 func (c *K8sMetaDataCache) AddServiceByIpPort(ip string, port uint32, resource *K8sServiceInfo) {
 	c.sMut.RLock()
-	portServiceInfo, ok := c.ipServiceInfo[ip]
+	portServiceInfo, ok := c.IpServiceInfo[ip]
 	c.sMut.RUnlock()
 	if ok {
 		c.sMut.Lock()
@@ -256,14 +256,14 @@ func (c *K8sMetaDataCache) AddServiceByIpPort(ip string, port uint32, resource *
 		portServiceInfo = make(map[uint32]*K8sServiceInfo)
 		portServiceInfo[port] = resource
 		c.sMut.Lock()
-		c.ipServiceInfo[ip] = portServiceInfo
+		c.IpServiceInfo[ip] = portServiceInfo
 		c.sMut.Unlock()
 	}
 }
 
 func (c *K8sMetaDataCache) GetServiceByIpPort(ip string, port uint32) (*K8sServiceInfo, bool) {
 	c.sMut.RLock()
-	portServiceInfo, ok := c.ipServiceInfo[ip]
+	portServiceInfo, ok := c.IpServiceInfo[ip]
 	defer c.sMut.RUnlock()
 	if !ok {
 		return nil, false
@@ -277,7 +277,7 @@ func (c *K8sMetaDataCache) GetServiceByIpPort(ip string, port uint32) (*K8sServi
 
 func (c *K8sMetaDataCache) DeleteServiceByIpPort(ip string, port uint32) {
 	c.sMut.RLock()
-	portServiceInfo, ok := c.ipServiceInfo[ip]
+	portServiceInfo, ok := c.IpServiceInfo[ip]
 	c.sMut.RUnlock()
 	if !ok {
 		return
@@ -285,33 +285,33 @@ func (c *K8sMetaDataCache) DeleteServiceByIpPort(ip string, port uint32) {
 	c.sMut.Lock()
 	delete(portServiceInfo, port)
 	if len(portServiceInfo) == 0 {
-		delete(c.ipServiceInfo, ip)
+		delete(c.IpServiceInfo, ip)
 	}
 	c.sMut.Unlock()
 }
 
 func (c *K8sMetaDataCache) ClearAll() {
 	c.pMut.Lock()
-	c.ipContainerInfo = make(map[string]map[uint32]*K8sContainerInfo)
+	c.IpContainerInfo = make(map[string]map[uint32]*K8sContainerInfo)
 	c.pMut.Unlock()
 
 	c.sMut.Lock()
-	c.ipServiceInfo = make(map[string]map[uint32]*K8sServiceInfo)
+	c.IpServiceInfo = make(map[string]map[uint32]*K8sServiceInfo)
 	c.sMut.Unlock()
 
 	c.cMut.Lock()
-	c.containerIdInfo = make(map[string]*K8sContainerInfo)
+	c.ContainerIdInfo = make(map[string]*K8sContainerInfo)
 	c.cMut.Unlock()
 }
 
 func (c *K8sMetaDataCache) String() string {
-	containerIdPodJson, _ := json.Marshal(c.containerIdInfo)
-	ipContainerJson, _ := json.Marshal(c.ipContainerInfo)
-	ipServiceJson, _ := json.Marshal(c.ipServiceInfo)
+	containerIdPodJson, _ := json.Marshal(c.ContainerIdInfo)
+	ipContainerJson, _ := json.Marshal(c.IpContainerInfo)
+	ipServiceJson, _ := json.Marshal(c.IpServiceInfo)
 	return fmt.Sprintf("{\"containerIdPodInfo\": %s, \"ipContainerInfo\": %s, \"ipServiceInfo\": %s}",
 		string(containerIdPodJson), string(ipContainerJson), string(ipServiceJson))
 }
 
 func (c *K8sMetaDataCache) GetNodeNameByIp(ip string) (string, bool) {
-	return globalNodeInfo.getNodeName(ip)
+	return GlobalNodeInfo.getNodeName(ip)
 }
