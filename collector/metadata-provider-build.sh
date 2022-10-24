@@ -1,0 +1,1 @@
+go build -o docker/metadata-provider ./cmd/metadata-provider/
