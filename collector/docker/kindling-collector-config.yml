@@ -24,12 +24,12 @@ receivers:
       - name: syscall_exit-connect
       - name: kretprobe-tcp_connect
       - name: kprobe-tcp_set_state
-      - name: kprobe-inet_csk_accept
-      - name: tracepoint-page_fault
-      - name: udf-slow_syscall
-        params:
-          latency: 1
-          timeout: 1000
+     # - name: kprobe-inet_csk_accept
+     # - name: tracepoint-page_fault
+     # - name: udf-slow_syscall
+     #   params:
+     #     latency: 1
+     #     timeout: 1000
 analyzers:
   tcpconnectanalyzer:
     channel_size: 10000
@@ -106,9 +106,12 @@ processors:
     kube_config_dir: /root/.kube/config
     grace_delete_period: 60
     dsf_config:
-      enable: true
+      enable: false
       debug: false
       config_server_addr: http://apm-configserver-svc:8888
+    metadata_provider_config:
+      enable: true
+      endpoint: http://metadata-provider:9504
   aggregateprocessor:
     # Aggregation duration window size. The unit is second.
     ticker_interval: 5

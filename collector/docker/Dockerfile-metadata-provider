@@ -4,4 +4,4 @@ WORKDIR /app/
 
 COPY metadata-provider /app/metadata-provider
 
-# ENTRYPOINT [ "metadata-provider" ]
+CMD [ "./metadata-provider" ]

@@ -18,6 +18,11 @@ spec:
       containers:
       - name: metadata-provider
         image: 10.10.102.213:8443/cloudnevro-test/metadata-provider:v1.0
+        command: ["./metadata-provider"]
+        args: 
+        - --http-port=9504
+        - --authType=serviceAccount
+        # - --kubeConfig=/root/.kube/config
         imagePullPolicy: Always
         securityContext:
           privileged: true
@@ -41,7 +46,7 @@ metadata:
   namespace: kindling
 spec:
   ports:
-    - port: 9503
+    - port: 9504
       protocol: TCP
       targetPort: http
   selector:

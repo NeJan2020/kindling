@@ -24,7 +24,7 @@ type Client struct {
 func NewMetaDataWrapperClient(endpoint string) *Client {
 	return &Client{
 		cli:      *createHTTPClient(),
-		endpoint: endpoint,
+		endpoint: endpoint + "/listAndWatch",
 	}
 }
 
@@ -83,7 +83,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.AddNode(&obj)
 		case "pod":
 			obj := corev1.Pod{}
@@ -92,7 +91,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.PodAdd(&obj)
 		case "service":
 			obj := corev1.Service{}
@@ -101,7 +99,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.AddService(&obj)
 		case "rs":
 			obj := appv1.ReplicaSet{}
@@ -110,7 +107,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.AddReplicaSet(&obj)
 		}
 	case "update":
@@ -147,7 +143,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, newObj.Name)
 			kubernetes.PodUpdate(&oldObj, &newObj)
 		case "service":
 			newObj := corev1.Service{}
@@ -192,7 +187,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.DeleteNode(&obj)
 		case "pod":
 			obj := corev1.Pod{}
@@ -201,7 +195,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.PodDelete(&obj)
 		case "service":
 			obj := corev1.Service{}
@@ -210,7 +203,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.DeleteService(&obj)
 		case "rs":
 			obj := appv1.ReplicaSet{}
@@ -219,7 +211,6 @@ func convertRespToEventAndApply(resp api.MetaDataVO) {
 				log.Printf("convert k8sMetadata falled, err: %v", err)
 				return
 			}
-			log.Printf("Debug: %s: %s ,Name: %s", resp.Operation, resp.Type, obj.Name)
 			kubernetes.DeleteReplicaSet(&obj)
 		}
 	}

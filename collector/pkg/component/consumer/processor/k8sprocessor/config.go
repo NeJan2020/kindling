@@ -37,6 +37,6 @@ var DefaultConfig Config = Config{
 	},
 	MetaDataProviderConfig: &kubernetes.MetaDataProviderConfig{
 		Enable:   false,
-		Endpoint: "http://localhost:9504/listAndWatch",
+		Endpoint: "http://localhost:9504",
 	},
 }
